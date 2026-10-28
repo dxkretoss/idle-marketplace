@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #b5d5ca;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #136c61;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(0, 79, 70, 0.10);
+    box-shadow: 0 10px 30px -5px rgba(0, 46, 39, 0.06);
+  }
+
+  .glass-card-hover {
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .glass-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 36px -6px rgba(0, 46, 39, 0.12);
+    border-color: rgba(0, 79, 70, 0.22);
+  }
+
+  .glass-dark {
+    background: rgba(0, 42, 37, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 16px 40px rgba(0, 20, 18, 0.45);
+  }
+
+  .glass-header {
+    background: rgba(255, 255, 255, 0.90);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(227, 233, 228, 0.85);
+  }
+
+  .glass-sidebar {
+    background: linear-gradient(165deg, #00332c 0%, #004d43 55%, #002621 100%);
+    box-shadow: 4px 0 24px rgba(0, 30, 26, 0.15);
+  }
+
+  .gold-gradient-btn {
+    background: linear-gradient(110deg, #e6ba62 0%, #d6a746 50%, #c49233 100%);
+    color: #122821;
+    font-weight: 700;
+    transition: all 0.2s ease;
+  }
+  .gold-gradient-btn:hover {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px -3px rgba(214, 167, 70, 0.4);
+  }
+  .gold-gradient-btn:active {
+    transform: translateY(0);
+  }
+
+  .emerald-gradient-btn {
+    background: linear-gradient(135deg, #004f46 0%, #006357 100%);
+    color: #ffffff;
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+  .emerald-gradient-btn:hover {
+    background: linear-gradient(135deg, #005c52 0%, #007466 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px -3px rgba(0, 79, 70, 0.35);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

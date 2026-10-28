@@ -1,0 +1,504 @@
+=== PAGE 1 ===
+S O F T WA R E D E V E LO P M E N T P R O P O S A L
+IDLE Marketplace
+Platform
+Development
+A responsive React.js web app, iOS and Android apps, a shared
+backend and an admin portal, with Reels, member payments,
+deposits, identity checks and QR handoffs.
+
+=== PAGE 2 ===
+01
+Project overview and understanding
+IDLE is a social-first local marketplace built on a simple idea: no one and nothing should have
+to sit idle. It connects neighbors and local businesses for rentals, services and local
+opportunities.
+Members can rent out unused tools, goods and space, offer their skills and time, and find trusted help
+nearby. IDLE earns recurring revenue from membership subscriptions rather than taking a commission
+on transactions between members. The planned launch market is a controlled pilot in the Dallas–Fort
+Worth area.
+01
+Discover
+Browse local listings, people
+and businesses by category,
+area and map.
+02
+List and earn
+Publish services and rentals
+with photos, pricing,
+availability and terms.
+03
+Connect
+Book, pay securely, hand off
+with a QR code and share local
+Reels.
+What this proposal covers. The complete IDLE platform with all core features: web application, iOS
+and Android apps, shared backend and admin portal, including social Reels, member payments and
+deposits, identity verification, QR handoffs, subscriptions, analytics, AI support, enterprise operations
+and a third-party tools marketplace. Later enhancements are listed as future scope.
+02
+Proposed development approach
+We will build a production-quality platform in clear milestones, with a working demo at the end of each
+one.
+1
+Start from the existing design
+We will review and polish IDLE's current concept designs and brand, not redesign from scratch.
+2
+Agree on scope before building
+The final feature list and acceptance criteria are confirmed in writing before development begins.
+3
+Build once, ship everywhere
+One shared backend and one cross-platform codebase for iOS and Android, with shared design and
+logic packages in a single repository.
+4
+Keep important rules on the server
+Payments, subscription access and data permissions are enforced by the backend, so they cannot be
+bypassed through the apps.
+5
+Hand over a platform the client owns
+Source code, accounts and documentation stay under Luna Enterprises' control.
+Confidential · October 26, 2026
+Page 1
+
+=== PAGE 3 ===
+03
+Technology stack
+A modern, widely supported stack. The mobile framework, React Native (Expo) or Flutter, will be
+confirmed with the client at kickoff.
+WEB APP AND ADMIN
+React.js + TypeScript
+Fast, responsive web interface
+sharing code and patterns with
+the mobile apps
+IOS AND ANDROID
+React Native (Expo) /
+Flutter
+One cross-platform codebase for
+both iOS and Android, lowering
+build and upkeep cost
+BACKEND AND DATABASE
+Supabase + PostgreSQL
+Managed database, sign-in,
+storage and server functions with
+row-level security
+PAYMENTS
+Stripe Billing, Connect,
+Identity
+Subscriptions, member payments,
+payouts, deposits and ID checks;
+card details never touch IDLE's
+servers
+MAPS
+Mapbox
+Map view of nearby listings using
+approximate locations
+VIDEO
+Mux
+Reels upload, processing and
+streaming, with 24-hour expiry
+04
+Main deliverables
+Four connected parts make up the platform. Detailed features are confirmed during scope sign-off.
+Web application
+React.js · responsive
+Sign-up, login, profiles and verification
+Discovery, search, map view and Reels feed
+Create and manage listings
+Bookings, offers, chat and agreements
+Payments, deposits and subscriptions
+Tools & Resources vendor directory
+iOS and Android apps
+React Native (Expo) / Flutter · one codebase
+Same core journeys as the web app
+Record and post Reels; photo upload
+QR code handoff and return scanning
+In-app payments and real-time chat
+Push notifications and AI help assistant
+Team dispatch with live location
+Backend
+Supabase · PostgreSQL · Stripe
+Authentication, profiles and ID checks
+Listings, availability and location search
+Bookings, agreements and QR handoff records
+Payments, payouts, deposits and refunds
+Subscriptions, plan limits and data security
+Business teams, locations and approvals
+Admin portal
+React.js · admin access only
+Manage users, listings and categories
+Moderate Reels and reported content
+Review payments, refunds and disputes
+View subscriptions and business accounts
+Analytics dashboard and reports
+Support requests and audit log
+Confidential · October 26, 2026
+Page 2
+
+=== PAGE 4 ===
+Core features included
+Social Reels
+Nearby Reels feed, short video
+posts, moderation and 24-hour
+expiry
+Member payments
+Secure payments between
+members and provider payouts
+through Stripe Connect
+Deposits and refunds
+Security deposit holds, release,
+refunds and a basic dispute
+workflow
+Identity verification
+ID checks for providers and
+members through Stripe Identity
+QR handoffs
+Single-use QR codes to confirm
+pickup and return, with condition
+photos
+Subscriptions
+Membership plans, checkout,
+billing portal and plan-based limits
+Business accounts
+Business profiles with team seats
+and basic roles
+Reviews and trust
+Ratings and reviews after
+completed bookings; report and
+block
+Analytics and reporting
+Owner dashboard for members,
+plans, revenue and bookings, with
+exportable reports
+AI and support
+AI help assistant for members, plus
+in-app support requests and a help
+center
+Enterprise operations
+Task dispatch to team members,
+live location and ETA during jobs,
+multi-location inventory and
+approvals
+Third-party marketplace
+Tools & Resources directory of
+vendors, with direct user billing
+where the vendor supports it
+Future scope. A workflow automation engine, background and insurance checks, independent
+arbitration referrals, seasonal themes and badges, free trials, annual plans and in-app purchase
+billing, accounting integrations, additional languages, and other enhancements can be scoped and
+quoted separately.
+Confidential · October 26, 2026
+Page 3
+
+=== PAGE 5 ===
+INCLUDED
+Where the final figure lands in the range
+The final price within the range depends on the confirmed feature details, how much the existing
+designs need beyond polish, and the payment and deposit rules agreed with the client.
+Final scope and acceptance criteria will be agreed before development begins. The price becomes
+fixed once both parties sign off the final feature list and acceptance criteria at the end of Milestone 1.
+Changes requested after that are handled through a written change request with its own estimate.
+Third-party service fees are not included (Section 08).
+App Store and Google Play deployment (store listings, submission and review) is not included in this estimate.
+Web application (React.js)
+iOS and Android apps (React
+Native / Flutter)
+Shared backend with Supabase
+and Stripe
+Reels, payments, deposits, ID
+checks and QR handoffs
+Analytics, AI support, enterprise
+tools and vendor directory
+Admin portal
+Design polish of existing concepts
+Testing, web deployment and
+handover
+Confidential · October 26, 2026
+Page 4
+
+=== PAGE 6 ===
+06
+Development timeline and key milestones
+1
+MILESTONE 1
+Discovery, design and project setup
+WEEK 1
+This milestone sets the foundation. We confirm exactly what will be built, finish the visual design from IDLE's
+existing concepts and prepare the technical environment, so development can start without open questions.
+KEY ACTIVITIES
+Review the existing concept designs, brand assets and project documents
+with the client.
+Polish the key screens for web and mobile: home and discovery, listing
+detail, listing creation, booking, chat, profile and subscription plans.
+Confirm the final feature list, user roles, subscription plans, launch
+categories and acceptance criteria.
+Map the main user flows, such as sign-up, publishing a listing, sending a
+booking request and upgrading a plan.
+Set up the code repository, development and staging environments, and
+the Supabase and Stripe test accounts.
+Design the database structure and the data security rules.
+DELIVERABLES
+CLIENT INPUT
+Design files, logo, account
+access and scope approval
+2
+MILESTONE 2
+Backend, payments and core marketplace
+WEEKS 2–3
+We build the shared backend that powers the web app, both mobile apps and the admin portal. All business
+rules and data protection live here, so every app behaves the same way and private data stays secure.
+KEY ACTIVITIES
+Build sign-up, login, password reset and session handling with Supabase
+Auth.
+Create user and business profiles with photos, descriptions, skills and
+service area.
+Build listings for services and rentals, with categories, photos, pricing,
+availability and terms.
+Add keyword, category and location search, using approximate locations
+to protect member privacy.
+Build booking requests and offers, with clear statuses: requested,
+countered, accepted and declined.
+Set up Stripe Connect for provider onboarding, member payments and
+payouts.
+Create single-use QR handoff tokens and booking agreement records.
+Apply row-level security so members can only see and change their own
+private information.
+DELIVERABLES
+CLIENT INPUT
+Approval of plan limits,
+categories and the payment
+model
+Signed-off scope and
+acceptance criteria
+Polished key screens
+Project plan and working
+environments
+Working backend on the
+staging environment
+Secure database with
+access rules
+Payments foundation in
+Stripe test mode
+Confidential · October 26, 2026
+Page 5
+
+=== PAGE 7 ===
+3
+MILESTONE 3
+Web, mobile apps and social Reels
+WEEKS 3–6
+With the backend in place, we build the screens people will use. The React.js web app and the iOS and Android
+apps are developed in parallel and connected to the same backend, so a listing or message created on one
+appears on all of them.
+KEY ACTIVITIES
+Build the responsive React.js web app for desktop, tablet and mobile
+browsers.
+Build the iOS and Android apps from one cross-platform codebase (React
+Native with Expo, or Flutter).
+Implement discovery, search with map view, listing detail and listing
+management.
+Build the Reels feed, recording and upload with Mux, including 24-hour
+expiry.
+Add QR code scanning for pickup and return, with condition photos.
+Build real-time chat with image sharing, plus push and email notifications.
+Build team dispatch with live location sharing and ETA during active jobs.
+Add the Tools & Resources vendor directory and the AI help assistant.
+Connect every screen to the backend and handle loading, empty and
+error states.
+DELIVERABLES
+CLIENT INPUT
+Feedback on each demo
+within two business days
+4
+MILESTONE 4
+Payments, trust and admin portal
+WEEKS 5–7
+This milestone completes the money and trust features and gives the team the tools to run the platform.
+Payments and subscription access are checked on the server, so they cannot be bypassed through the apps.
+KEY ACTIVITIES
+Configure the agreed subscription plans in Stripe, with Stripe-hosted
+checkout and a billing portal for members.
+Handle Stripe events for successful payments, renewals, failed payments
+and cancellations.
+Enforce plan limits, such as the number of active listings, across web and
+mobile.
+Complete in-app payments, security deposit holds, release and refunds.
+Add identity verification with Stripe Identity, plus reviews, reporting and
+blocking.
+Build the admin portal for users, listings, Reels moderation, payments and
+disputes.
+Add business accounts with team seats, multiple locations and approvals.
+Build the owner analytics dashboard, exportable reports, support
+requests and an admin audit log.
+DELIVERABLES
+CLIENT INPUT
+Final prices, deposit rules and
+Stripe account approval
+Working web app on
+staging
+iOS and Android test builds
+End-to-end user journeys
+on all platforms
+Payments, deposits and
+subscriptions in test mode
+Identity checks working
+Admin portal on staging
+Confidential · October 26, 2026
+Page 6
+
+=== PAGE 8 ===
+5
+MILESTONE 5
+Testing, launch preparation and handover
+WEEKS 7–8
+We test the full platform against the agreed acceptance criteria, fix any issues and deploy the web platform to
+production. The client receives everything needed to own, run and extend IDLE.
+KEY ACTIVITIES
+Test the main features and user journeys on web, iOS and Android
+devices.
+Test payments, deposits, refunds, QR handoffs, Reels and Stripe events.
+Test sign-in, permissions and data security rules.
+Fix agreed defects and polish the interface based on client review.
+Deploy the web app, admin portal, database and server functions to
+production.
+Switch Stripe to live mode once the client approves prices and payment
+terms.
+Hand over the full source code, setup and deployment documentation,
+and run a walkthrough session.
+DELIVERABLES
+CLIENT INPUT
+Acceptance review and sign-
+off
+Week ranges are approximate and are confirmed in the project plan at scope sign-off. App Store and Google Play
+deployment (store listings, submission and review) is not included.
+07
+Key assumptions and dependencies
+The timeline and estimate assume the following. A delay in any dependency moves the delivery date by
+a matching amount.
+Dependencies on the client
+Design files and the master logo are shared in
+the first two working days.
+The scope is approved by the end of Week 1.
+Supabase, Stripe, Mux, Mapbox and domain
+accounts are available when needed.
+Feedback and approvals arrive within two
+business days.
+Counsel-approved Terms of Use and Privacy
+Notice are supplied before public launch.
+Assumptions to confirm at kickoff
+Plan prices, listing limits and launch categories
+are approved by the owner.
+Subscriptions are purchased on the web; the
+apps show plan status.
+The payment model, deposit rules and fees are
+approved by the client, counsel and Stripe
+before payments go live.
+English only and USD only.
+New features requested during the build go
+through a change request.
+Future-scope items, such as workflow automation and other enhancements, require additional time
+and budget.
+Production web platform
+Final mobile app builds
+Source code and
+documentation
+Confidential · October 26, 2026
+Page 7
+
+=== PAGE 9 ===
+08
+Third-party service fees and accounts
+Third-party fees are separate from development costs. Luna Enterprises will own each production
+account and provide the access and approvals we need. Current vendor pricing will be confirmed
+together at kickoff.
+SERVICE
+USED FOR
+COST BASIS
+Supabase
+Database, sign-in, storage, server
+functions
+Plan and usage
+pricing
+Web hosting
+Web app and admin portal
+Plan pricing
+Stripe
+Subscriptions, member payments,
+payouts, ID checks
+Per-transaction and
+per-check fees
+Mapbox
+Map view, live location and ETA
+Usage pricing
+AI model provider
+AI help assistant
+Usage pricing
+Mux
+Reels video upload and streaming
+Usage pricing
+Apple and Google developer accounts
+Publishing the mobile apps
+Apple's annual fee;
+Google's one-time fee
+Build service, email, monitoring, domain
+Mobile builds, notifications, notices,
+error tracking, web address
+Free tiers or plan
+pricing
+Billing users directly for third-party services will be set up only where the vendor supports that arrangement. Some
+services can only bill the platform owner, so not every service can be charged to an individual user.
+09
+Testing, deployment and handover
+Testing
+Responsive layouts on desktop, tablet and
+mobile
+Core features and user journeys
+Integration between apps and the backend
+Sign-in, permissions and data security rules
+Payments, deposits, refunds and subscriptions
+in Stripe test mode
+QR handoff, Reels upload, dispatch and AI
+assistant flows
+iOS and Android device testing
+Fixing agreed defects
+Deployment and handover
+Web app and admin portal deployed to the
+client's hosting
+Database and server functions deployed to
+production
+Stripe switched to live mode after approval
+Full source code in a client-owned repository
+Setup and deployment documentation
+A walkthrough session with the client team
+App Store and Google Play deployment (store listings, submission and review) is not included. A third-party penetration
+test, formal security certification and load testing are also not included and can be quoted separately.
+Confidential · October 26, 2026
+Page 8
+
+=== PAGE 10 ===
+10
+Next steps
+1
+Review the proposal
+Share questions or
+changes
+2
+Confirm
+assumptions
+Review Section 07 and
+note any changes
+3
+Sign the agreement
+Payment schedule, IP
+and confidentiality
+terms
+4
+Kickoff
+Share designs and
+account access
+5
+Scope sign-off
+Final features and
+acceptance criteria fix
+the price
+Confidential · October 26, 2026
+Page 9

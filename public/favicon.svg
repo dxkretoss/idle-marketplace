@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <!-- Deep forest emerald gradient matching IDLE sidebar -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#003830" />
+      <stop offset="55%" stop-color="#004d43" />
+      <stop offset="100%" stop-color="#00241e" />
+    </linearGradient>
+
+    <!-- Warm champagne gold gradient matching ∞ brand loop -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fae2a5" />
+      <stop offset="40%" stop-color="#d7b467" />
+      <stop offset="100%" stop-color="#b68930" />
+    </linearGradient>
+
+    <!-- Subtle inner drop shadow -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#000000" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- Squircle container -->
+  <rect width="96" height="96" rx="24" fill="url(#bgGrad)" />
+  <rect width="94" height="94" x="1" y="1" rx="23" fill="none" stroke="rgba(255, 255, 255, 0.16)" stroke-width="1.5" />
+
+  <!-- Serif gold infinity symbol -->
+  <text 
+    x="48" 
+    y="46" 
+    font-family="Georgia, 'Times New Roman', 'Source Serif 4', serif" 
+    font-size="68" 
+    font-weight="bold" 
+    fill="url(#goldGrad)" 
+    text-anchor="middle" 
+    dominant-baseline="central"
+    filter="url(#glow)"
+  >
+    &#8734;
+  </text>
+</svg>
