@@ -6,7 +6,7 @@
   * {
     box-sizing: border-box;
   }
-  
+
   html {
     scroll-behavior: smooth;
   }
@@ -16,13 +16,16 @@
     width: 6px;
     height: 6px;
   }
+
   ::-webkit-scrollbar-track {
     background: transparent;
   }
+
   ::-webkit-scrollbar-thumb {
     background: #b5d5ca;
     border-radius: 9999px;
   }
+
   ::-webkit-scrollbar-thumb:hover {
     background: #136c61;
   }
@@ -40,6 +43,7 @@
   .glass-card-hover {
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
+
   .glass-card-hover:hover {
     transform: translateY(-2px);
     box-shadow: 0 16px 36px -6px rgba(0, 46, 39, 0.12);
@@ -72,11 +76,13 @@
     font-weight: 700;
     transition: all 0.2s ease;
   }
+
   .gold-gradient-btn:hover {
     filter: brightness(1.06);
     transform: translateY(-1px);
     box-shadow: 0 6px 20px -3px rgba(214, 167, 70, 0.4);
   }
+
   .gold-gradient-btn:active {
     transform: translateY(0);
   }
@@ -87,6 +93,7 @@
     font-weight: 600;
     transition: all 0.2s ease;
   }
+
   .emerald-gradient-btn:hover {
     background: linear-gradient(135deg, #005c52 0%, #007466 100%);
     transform: translateY(-1px);
@@ -96,8 +103,13 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+}
+
+#nl-badge-frame {
+  display: none !important;
 }
