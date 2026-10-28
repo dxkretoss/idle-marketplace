@@ -46,10 +46,16 @@ const DFW_LOCATIONS = [
 ];
 
 export const AuthView = () => {
-  const { login, signup, setRoute, addToast } = useApp();
+  const { login, signup, setRoute, addToast, authMode, setAuthMode } = useApp();
 
-  const [mode, setMode] = useState('signin'); // 'signin' | 'signup' | 'forgot'
+  const [mode, setMode] = useState(authMode || 'signin'); // 'signin' | 'signup' | 'forgot'
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (authMode && (authMode === 'signin' || authMode === 'signup')) {
+      setMode(authMode);
+    }
+  }, [authMode]);
 
   // Form States
   const [email, setEmail] = useState('');
@@ -230,7 +236,7 @@ export const AuthView = () => {
 
               <button
                 type="submit"
-                className="gold-gradient-btn w-full py-3.5 rounded-xl text-sm font-bold shadow-md flex items-center justify-center gap-2"
+                className="gold-gradient-btn w-full py-3.5 rounded-xl text-sm font-bold shadow-md flex items-center justify-center gap-2 cursor-pointer"
               >
                 <LogIn className="w-4 h-4" />
                 <span>Sign In to IDLE</span>

@@ -1,28 +1,37 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { 
-  User, 
-  ShieldCheck, 
-  Wallet, 
-  Bell, 
-  Download, 
-  RotateCcw, 
-  CheckCircle2, 
-  MapPin, 
+import {
+  User,
+  ShieldCheck,
+  Wallet,
+  Bell,
+  Download,
+  RotateCcw,
+  CheckCircle2,
+  MapPin,
   Mail,
   Crown,
   ExternalLink,
-  LogOut
+  LogOut,
+  Camera
 } from 'lucide-react';
 
 import { AuthGate } from '../components/common/AuthGate';
+
+const AVATAR_PRESETS = [
+  { label: 'Creative Studio', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80' },
+  { label: 'Pro Handyman', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80' },
+  { label: 'Fleet Ops', url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80' },
+  { label: 'General Contractor', url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80' }
+];
 
 export const ProfileView = () => {
   const { user, setUser, plan, setPlan, setRoute, resetDemoData, addToast, logout, isAuthenticated } = useApp();
 
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email || 'alex.morgan@example.com');
-  const [area, setArea] = useState(user.area);
+  const [area, setArea] = useState(user.area || 'Frisco, TX');
+  const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl || AVATAR_PRESETS[0].url);
   const [notifications, setNotifications] = useState(user.notifications);
 
   if (!isAuthenticated) {
@@ -43,9 +52,10 @@ export const ProfileView = () => {
       name,
       email,
       area,
+      avatarUrl,
       notifications
     }));
-    addToast('Profile updated successfully!', 'success');
+    addToast('Profile and location updated successfully!', 'success');
   };
 
   const handleExportData = () => {
@@ -62,7 +72,7 @@ export const ProfileView = () => {
   };
 
   return (
-    <div className="space-y-8 pb-16 max-w-4xl mx-auto">
+    <div className="space-y-8 pb-16 w-full">
       {/* Page Heading */}
       <div>
         <span className="text-[10px] font-bold uppercase tracking-wider text-idle-gold block">
@@ -72,15 +82,24 @@ export const ProfileView = () => {
           Member Profile & Verification.
         </h1>
         <p className="text-xs sm:text-sm text-idle-muted mt-1">
-          Manage your verified credentials, Stripe Connect payout setup, and personal privacy controls.
+          Manage your verified credentials, active service location, and profile photo.
         </p>
       </div>
 
       {/* Member Banner Card */}
       <div className="glass-card p-6 md:p-8 rounded-3xl border border-idle-emerald/20 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-glass">
         <div className="flex items-center gap-4 text-center sm:text-left">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-[#d6a746] to-[#004f46] text-white flex items-center justify-center font-bold text-xl sm:text-2xl shadow-md border-2 border-white">
-            {user.avatar || 'AM'}
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gradient-to-tr from-[#d6a746] to-[#004f46] text-white flex items-center justify-center font-bold text-xl sm:text-2xl shadow-md border-2 border-white flex-shrink-0 relative group">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={user.name}
+                className="w-full h-full object-cover"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+            ) : (
+              <span>{user.avatar || 'AM'}</span>
+            )}
           </div>
           <div className="space-y-1">
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
@@ -93,7 +112,7 @@ export const ProfileView = () => {
             </div>
             <div className="flex items-center justify-center sm:justify-start gap-1 text-xs text-idle-muted">
               <MapPin className="w-3.5 h-3.5 text-idle-gold" />
-              <span>{user.area} · North Texas Pilot</span>
+              <span>{area} · North Texas Pilot</span>
             </div>
           </div>
         </div>
@@ -152,17 +171,69 @@ export const ProfileView = () => {
               />
             </div>
 
+            {/* Service Location with quick suggestions */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-idle-muted mb-1">
-                Service Radius / Area
+                Active Service Location
               </label>
-              <input
-                type="text"
-                required
-                value={area}
-                onChange={(e) => setArea(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-idle-line bg-[#f8faf9] focus:bg-white focus:border-idle-emerald outline-none"
-              />
+              <div className="space-y-1.5">
+                <input
+                  type="text"
+                  required
+                  value={area}
+                  onChange={(e) => setArea(e.target.value)}
+                  placeholder="e.g. Frisco, TX"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-idle-line bg-[#f8faf9] focus:bg-white focus:border-idle-emerald outline-none"
+                />
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {['Frisco, TX', 'Plano, TX', 'Dallas, TX', 'Fort Worth, TX', 'McKinney, TX', 'Arlington, TX'].map(city => (
+                    <button
+                      key={city}
+                      type="button"
+                      onClick={() => setArea(city)}
+                      className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${area === city
+                          ? 'bg-idle-mint text-idle-emerald border-idle-emerald font-bold'
+                          : 'bg-white border-idle-line text-idle-muted hover:border-idle-emerald/40'
+                        }`}
+                    >
+                      {city}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Profile Avatar Selection */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-idle-muted mb-1">
+                Profile Image
+              </label>
+              <div className="space-y-2">
+                <input
+                  type="url"
+                  value={avatarUrl}
+                  onChange={(e) => setAvatarUrl(e.target.value)}
+                  placeholder="Paste image URL (https://...)"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-idle-line bg-[#f8faf9] focus:bg-white focus:border-idle-emerald outline-none text-xs"
+                />
+                <div className="flex items-center gap-2 pt-0.5">
+                  <span className="text-[10px] text-idle-muted font-bold uppercase">Presets:</span>
+                  <div className="flex items-center gap-1.5">
+                    {AVATAR_PRESETS.map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => setAvatarUrl(preset.url)}
+                        title={preset.label}
+                        className={`w-7 h-7 rounded-full overflow-hidden border-2 transition-all cursor-pointer ${avatarUrl === preset.url ? 'border-idle-emerald scale-110 shadow-sm' : 'border-transparent opacity-70 hover:opacity-100'
+                          }`}
+                      >
+                        <img src={preset.url} alt={preset.label} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
 
             <label className="flex items-center gap-2 text-xs text-idle-muted pt-1 cursor-pointer">
@@ -222,7 +293,7 @@ export const ProfileView = () => {
       </div>
 
       {/* Demo Controls & Data Management */}
-      <section className="glass-card p-6 rounded-3xl border border-idle-line space-y-3">
+      {/* <section className="glass-card p-6 rounded-3xl border border-idle-line space-y-3">
         <h3 className="font-serif text-base font-bold text-[#0d2e29]">
           Demo Controls & Governance
         </h3>
@@ -263,7 +334,7 @@ export const ProfileView = () => {
             <span>Reset Demo State</span>
           </button>
         </div>
-      </section>
+      </section> */}
     </div>
   );
 };

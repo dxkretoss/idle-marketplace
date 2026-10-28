@@ -20,6 +20,9 @@ import { MembershipView } from './views/MembershipView';
 import { ProfileView } from './views/ProfileView';
 import { JourneyView } from './views/JourneyView';
 import { AuthView } from './views/AuthView';
+import { ContactView } from './views/ContactView';
+import { PrivacyView } from './views/PrivacyView';
+import { TermsView } from './views/TermsView';
 
 const MainContent = () => {
   const { route } = useApp();
@@ -37,11 +40,9 @@ const MainContent = () => {
       case 'messages':
         return <MessagesView />;
       case 'transactions':
-        return <BookingsView />;
       case 'enterprise':
-        return <EnterpriseView />;
       case 'resources':
-        return <ResourcesView />;
+        return <HomeView />;
       case 'membership':
         return <MembershipView />;
       case 'profile':
@@ -50,6 +51,12 @@ const MainContent = () => {
         return <JourneyView />;
       case 'auth':
         return <AuthView />;
+      case 'contact':
+        return <ContactView />;
+      case 'privacy':
+        return <PrivacyView />;
+      case 'terms':
+        return <TermsView />;
       default:
         return <HomeView />;
     }
@@ -77,7 +84,7 @@ const MainContent = () => {
           <Topbar />
 
           {/* View Container */}
-          <main className="flex-1 p-4 sm:p-6 md:p-8 w-full min-w-0">
+          <main className="flex-1 p-4 sm:p-6 md:p-8 pb-0 sm:pb-0 md:pb-0 w-full min-w-0">
             {renderCurrentView()}
           </main>
         </div>

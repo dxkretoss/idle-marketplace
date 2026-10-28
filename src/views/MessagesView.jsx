@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { AuthGate } from '../components/common/AuthGate';
 import { 
   MessageSquare, 
   Send, 
@@ -23,7 +24,7 @@ const getProviderImage = (thread) => {
 };
 
 export const MessagesView = () => {
-  const { inbox, sendMessage, plan, setRoute, setPlan, isAuthenticated } = useApp();
+  const { inbox, sendMessage, plan, setRoute, setPlan, isAuthenticated, addToast } = useApp();
 
   const [activeThreadId, setActiveThreadId] = useState(inbox[0]?.id || 'th-1');
   const [inputText, setInputText] = useState('');
@@ -184,7 +185,7 @@ export const MessagesView = () => {
                 </div>
 
                 <button
-                  onClick={() => setRoute('transactions')}
+                  onClick={() => addToast('Booking details and single-use QR custody will be available in Phase 2!', 'info')}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-idle-emerald text-idle-emerald hover:bg-idle-mint transition-colors cursor-pointer"
                 >
                   <QrCode className="w-3.5 h-3.5" />

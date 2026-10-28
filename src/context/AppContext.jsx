@@ -8,14 +8,20 @@ import {
 
 const AppContext = createContext(null);
 
-const STORAGE_KEY = 'idle_marketplace_app_state_v1';
+const STORAGE_KEY = 'idle_marketplace_app_state_v2';
+const LEGACY_STORAGE_KEY = 'idle_marketplace_app_state_v1';
 
 export const AppProvider = ({ children }) => {
   // Load saved state or use initial defaults
   const loadInitialState = () => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
+      if (typeof window !== 'undefined' && window.localStorage) {
+        if (localStorage.getItem(LEGACY_STORAGE_KEY)) {
+          localStorage.removeItem(LEGACY_STORAGE_KEY);
+        }
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) return JSON.parse(saved);
+      }
     } catch (e) {
       console.warn('Could not read from localStorage', e);
     }
@@ -24,45 +30,83 @@ export const AppProvider = ({ children }) => {
 
   const savedState = loadInitialState();
 
-  const VALID_ROUTES = ['home', 'explore', 'reels', 'post', 'messages', 'transactions', 'enterprise', 'resources', 'membership', 'profile', 'journey', 'auth'];
+  const VALID_ROUTES = ['home', 'explore', 'reels', 'post', 'messages', 'transactions', 'enterprise', 'resources', 'membership', 'profile', 'journey', 'auth', 'privacy', 'terms', 'contact'];
+  const PHASE_2_ROUTES = ['transactions', 'enterprise', 'resources'];
 
   const getInitialRoute = () => {
     // Check clean pathname first (e.g. /post, /explore)
     const pathname = window.location.pathname.replace(/^\/+/, '').split('/')[0];
-    if (pathname && VALID_ROUTES.includes(pathname)) {
+    if (pathname && VALID_ROUTES.includes(pathname) && !PHASE_2_ROUTES.includes(pathname)) {
       return pathname;
     }
     // Clean up any remaining legacy hash if present
     const hash = window.location.hash.replace('#', '').split('?')[0];
-    if (hash && VALID_ROUTES.includes(hash)) {
+    if (hash && VALID_ROUTES.includes(hash) && !PHASE_2_ROUTES.includes(hash)) {
       window.history.replaceState(null, '', hash === 'home' ? '/' : `/${hash}`);
       return hash;
     }
-    return savedState?.route || 'home';
+    return savedState?.route && !PHASE_2_ROUTES.includes(savedState.route) ? savedState.route : 'home';
   };
 
   // Core navigation route (clean URLs without #)
   const [route, setRouteState] = useState(getInitialRoute);
 
-  // User & Subscription Plan
-  const [isAuthenticated, setIsAuthenticated] = useState(savedState?.isAuthenticated ?? true);
-  const [user, setUser] = useState(savedState?.user || {
-    name: 'Alex Morgan',
-    email: 'alex.morgan@example.com',
-    area: 'Frisco, TX',
-    plan: 'Free',
-    isVerified: true,
-    stripeConnected: true,
-    joined: true,
-    avatar: 'AM',
-    notifications: true
+  // User & Subscription Plan - strictly false by default for first-time visitors
+  const [isAuthenticated, setIsAuthenticated] = useState(Boolean(savedState?.isAuthenticated));
+  const [authMode, setAuthMode] = useState('signin'); // 'signin' | 'signup'
+
+  const openAuth = (mode = 'signin') => {
+    setAuthMode(mode);
+    setRoute('auth');
+  };
+
+  const DEFAULT_AVATAR_URL = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80';
+
+  const [user, setUser] = useState(() => {
+    const defaultUser = {
+      name: 'Alex Morgan',
+      email: 'alex.morgan@example.com',
+      area: 'Frisco, TX',
+      plan: 'Free',
+      isVerified: true,
+      stripeConnected: true,
+      joined: true,
+      avatar: 'AM',
+      avatarUrl: DEFAULT_AVATAR_URL,
+      notifications: true
+    };
+    if (savedState?.user) {
+      return {
+        ...defaultUser,
+        ...savedState.user,
+        avatarUrl: savedState.user.avatarUrl || DEFAULT_AVATAR_URL
+      };
+    }
+    return defaultUser;
   });
+
+  const setUserLocation = (newArea) => {
+    setUser(prev => ({
+      ...prev,
+      area: newArea
+    }));
+    addToast(`Active location set to ${newArea}!`, 'success');
+  };
 
   const [plan, setPlanState] = useState(savedState?.plan || 'Free');
 
   // Auth actions
   const login = (email, password) => {
     setIsAuthenticated(true);
+    if (email && email !== 'alex.morgan@example.com') {
+      const generatedName = email.split('@')[0].split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ') || 'Alex Morgan';
+      setUser(prev => ({
+        ...prev,
+        email: email,
+        name: generatedName,
+        avatar: (email.split('@')[0].slice(0, 2) || 'AM').toUpperCase()
+      }));
+    }
     addToast(`Welcome back, ${user.name}!`, 'success');
     setRoute('home');
   };
@@ -87,7 +131,7 @@ export const AppProvider = ({ children }) => {
   const logout = () => {
     setIsAuthenticated(false);
     addToast('You have been signed out.', 'info');
-    setRoute('auth');
+    setRoute('home');
   };
 
   // Search & Exploration Filters
@@ -186,15 +230,21 @@ export const AppProvider = ({ children }) => {
   const [enterpriseTeam, setEnterpriseTeam] = useState(savedState?.enterpriseTeam || INITIAL_ENTERPRISE_TEAM);
   const [enterpriseTasks, setEnterpriseTasks] = useState(savedState?.enterpriseTasks || INITIAL_ENTERPRISE_TASKS);
 
-  // Toasts Notification system
+  // Toasts Notification system (with duplicate suppression)
   const [toasts, setToasts] = useState([]);
 
   const addToast = (message, type = 'info') => {
-    const id = Date.now() + Math.random();
-    setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 4000);
+    setToasts(prev => {
+      // Prevent identical notifications from appearing twice simultaneously
+      if (prev.some(t => t.message === message)) {
+        return prev;
+      }
+      const id = Date.now() + Math.random();
+      setTimeout(() => {
+        setToasts(current => current.filter(t => t.id !== id));
+      }, 3500);
+      return [...prev, { id, message, type }];
+    });
   };
 
   const removeToast = (id) => {
@@ -203,6 +253,10 @@ export const AppProvider = ({ children }) => {
 
   // Clean HTML5 route transitions (no # in URL)
   const setRoute = (newRoute) => {
+    if (PHASE_2_ROUTES.includes(newRoute)) {
+      addToast('This feature will be available in Phase 2!', 'info');
+      return;
+    }
     setRouteState(newRoute);
     const path = newRoute === 'home' ? '/' : `/${newRoute}`;
     window.history.pushState({ route: newRoute }, '', path);
@@ -213,8 +267,11 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     const handlePopState = () => {
       const pathname = window.location.pathname.replace(/^\/+/, '').split('/')[0] || 'home';
-      if (VALID_ROUTES.includes(pathname)) {
+      if (VALID_ROUTES.includes(pathname) && !PHASE_2_ROUTES.includes(pathname)) {
         setRouteState(pathname);
+      } else {
+        setRouteState('home');
+        window.history.replaceState(null, '', '/');
       }
     };
     window.addEventListener('popstate', handlePopState);
@@ -230,16 +287,14 @@ export const AppProvider = ({ children }) => {
 
   // Toggle favorite / bookmark
   const toggleLike = (id) => {
-    setLikes(prev => {
-      const exists = prev.includes(id);
-      if (exists) {
-        addToast('Removed from saved favorites', 'info');
-        return prev.filter(x => x !== id);
-      } else {
-        addToast('Saved to your favorites!', 'success');
-        return [...prev, id];
-      }
-    });
+    const isLiked = likes.includes(id);
+    if (isLiked) {
+      setLikes(prev => prev.filter(x => x !== id));
+      addToast('Removed from saved favorites', 'info');
+    } else {
+      setLikes(prev => [...prev, id]);
+      addToast('Saved to your favorites!', 'success');
+    }
   };
 
   // Add new listing
@@ -315,8 +370,7 @@ export const AppProvider = ({ children }) => {
     };
     setBookings(prev => [newBooking, ...prev]);
     setActiveBooking(newBooking);
-    setRoute('transactions');
-    addToast('Booking initiated! Review the agreement & terms.', 'info');
+    addToast('Booking initiated! Agreement & single-use QR custody features will launch in Phase 2.', 'info');
   };
 
   // Update booking stage
@@ -423,11 +477,15 @@ export const AppProvider = ({ children }) => {
       route,
       setRoute,
       isAuthenticated,
+      authMode,
+      setAuthMode,
+      openAuth,
       login,
       signup,
       logout,
       user,
       setUser,
+      setUserLocation,
       plan,
       setPlan,
       search,
