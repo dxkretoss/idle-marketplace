@@ -485,11 +485,8 @@ export const ExploreView = () => {
                         <button
                           type="button"
                           onClick={() => {
-                            if (selectedPinId === item.id) {
-                              setActiveListing(item);
-                            } else {
-                              setSelectedPinId(item.id);
-                            }
+                            setSelectedPinId(item.id);
+                            setActiveListing(item);
                           }}
                           className={`group flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold shadow-md transition-all cursor-pointer whitespace-nowrap ${
                             isSelected

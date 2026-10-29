@@ -120,7 +120,7 @@ const FAQS = [
 ];
 
 export const HomeView = () => {
-  const { setRoute, setCategory, listings, setActiveListing, user } = useApp();
+  const { setRoute, setCategory, listings, setActiveListing, user, setReelsFilter } = useApp();
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [activeShowcaseId, setActiveShowcaseId] = useState('cinema');
   const [openFaqIndex, setOpenFaqIndex] = useState(0);
@@ -409,7 +409,13 @@ export const HomeView = () => {
 
       {/* 24-Hour Reels Stories Strip */}
       <section>
-        <StoriesStrip onOpenUpload={() => setUploadModalOpen(true)} />
+        <StoriesStrip
+          onOpenUpload={() => setUploadModalOpen(true)}
+          onSelectCategory={(cat) => {
+            if (setReelsFilter) setReelsFilter(cat);
+            setRoute('reels');
+          }}
+        />
       </section>
 
       {/* How IDLE Works: The Single-Use QR Protocol */}
