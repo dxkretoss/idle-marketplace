@@ -6,6 +6,7 @@ import { MobileBottomNav } from './components/layout/MobileBottomNav';
 import { ToastContainer } from './components/layout/ToastContainer';
 import { ListingDetailModal } from './components/modals/ListingDetailModal';
 import { ReelViewerModal } from './components/modals/ReelViewerModal';
+import { ResourceDetailModal } from './components/modals/ResourceDetailModal';
 
 // Views
 import { HomeView } from './views/HomeView';
@@ -40,9 +41,12 @@ const MainContent = () => {
       case 'messages':
         return <MessagesView />;
       case 'transactions':
+      case 'bookings':
+        return <BookingsView />;
       case 'enterprise':
+        return <EnterpriseView />;
       case 'resources':
-        return <HomeView />;
+        return <ResourcesView />;
       case 'membership':
         return <MembershipView />;
       case 'profile':
@@ -93,6 +97,7 @@ const MainContent = () => {
       {/* Global Interactive Modals & Drawers */}
       <ListingDetailModal />
       <ReelViewerModal />
+      <ResourceDetailModal />
       <ToastContainer />
 
       {/* Mobile Bottom Navigation */}

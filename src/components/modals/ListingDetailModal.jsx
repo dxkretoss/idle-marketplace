@@ -121,29 +121,37 @@ export const ListingDetailModal = () => {
             </div>
           </div>
 
-          {/* Title & Price Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h2 className="font-serif text-2xl md:text-3xl font-bold text-[#0d2e29]">
+          {/* Title & Price Header - Redesigned UI */}
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-1">
+            <div className="space-y-1.5 max-w-xl">
+              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#0d2e29] leading-tight">
                 {activeListing.title}
               </h2>
-              <p className="text-xs md:text-sm text-idle-muted mt-1 flex items-center gap-2">
-                <span>Offered by <strong className="text-[#172d28]">{activeListing.owner}</strong></span>
+              <div className="flex items-center gap-2 flex-wrap text-xs sm:text-sm text-idle-muted">
+                <span>Offered by <strong className="text-[#172d28] font-semibold">{activeListing.owner}</strong></span>
                 {activeListing.ownerVerified && (
-                  <span className="inline-flex items-center gap-1 text-[11px] text-idle-emerald font-semibold bg-idle-mint px-2 py-0.5 rounded-full">
-                    <ShieldCheck className="w-3 h-3" /> Stripe Verified
+                  <span className="inline-flex items-center gap-1 text-[11px] text-idle-emerald font-semibold bg-idle-mint px-2.5 py-0.5 rounded-full border border-idle-emerald/20">
+                    <ShieldCheck className="w-3.5 h-3.5 text-idle-emerald" />
+                    <span>Stripe Verified</span>
                   </span>
                 )}
-              </p>
+              </div>
             </div>
 
-            <div className="flex items-baseline gap-1.5 p-3 rounded-2xl bg-[#f4f8f6] border border-idle-line">
-              <span className="text-3xl font-extrabold text-[#004f46]">${activeListing.price}</span>
-              <span className="text-xs font-medium text-idle-muted">/ {activeListing.unit}</span>
-              {activeListing.deposit > 0 && (
-                <span className="text-[10px] text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-full ml-1">
-                  ${activeListing.deposit} deposit hold
+            {/* Clean Price Card */}
+            <div className="flex flex-col items-start sm:items-end justify-center px-4 py-2.5 rounded-2xl bg-[#f8faf9] border border-idle-line shrink-0 shadow-2xs">
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl sm:text-3xl font-extrabold text-[#004f46]">
+                  ${activeListing.price}
                 </span>
+                <span className="text-xs font-medium text-idle-muted">
+                  / {activeListing.unit}
+                </span>
+              </div>
+              {activeListing.deposit > 0 && (
+                <div className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-amber-900 bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-md">
+                  <span>${activeListing.deposit} deposit hold</span>
+                </div>
               )}
             </div>
           </div>

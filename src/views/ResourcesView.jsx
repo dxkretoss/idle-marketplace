@@ -1,7 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { RESOURCE_GUIDES } from '../data/mockData';
-import { ResourceDetailModal } from '../components/modals/ResourceDetailModal';
 import { 
   UserCheck, 
   Wallet, 
@@ -115,8 +114,7 @@ export const ResourcesView = () => {
         </button>
       </section>
 
-      {/* Resource Detail Modal */}
-      <ResourceDetailModal />
+
     </div>
   );
 };

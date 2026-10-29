@@ -19,9 +19,9 @@ const NAV_ITEMS = [
   { id: 'reels', label: 'Reels', icon: PlaySquare },
   { id: 'post', label: 'Post', icon: PlusCircle, isPost: true },
   { id: 'messages', label: 'Inbox', icon: MessageSquare },
-  { id: 'transactions', label: 'Bookings', icon: Briefcase, isHash: true },
-  { id: 'enterprise', label: 'Enterprise', icon: Building2, isHash: true },
-  { id: 'resources', label: 'Resources', icon: Grid, isHash: true },
+  { id: 'bookings', label: 'Bookings', icon: Briefcase },
+  { id: 'enterprise', label: 'Enterprise', icon: Building2 },
+  { id: 'resources', label: 'Resources', icon: Grid },
   { id: 'membership', label: 'Membership', icon: Crown },
   { id: 'profile', label: 'Profile', icon: User },
 ];
@@ -49,17 +49,12 @@ export const SidebarNav = () => {
       <div className="flex-1 flex flex-col gap-1 overflow-y-auto no-scrollbar py-1">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
-          const isActive = route === item.id;
+          const isActive = route === item.id || (item.id === 'bookings' && route === 'transactions');
           return (
-            <a
-              href="#"
+            <button
+              type="button"
               key={item.id}
-              onClick={(e) => {
-                e.preventDefault();
-                if (item.isHash) {
-                  addToast(`${item.label} will be available in Phase 2!`, 'info');
-                  return;
-                }
+              onClick={() => {
                 if (item.id === 'post' && !isAuthenticated) {
                   addToast('Please sign in or create an account to post a listing', 'info');
                   if (openAuth) {
@@ -77,7 +72,7 @@ export const SidebarNav = () => {
                     ? 'text-idle-gold hover:bg-white/10'
                     : 'text-emerald-100/80 hover:text-white hover:bg-white/10'
                 }`}
-              title={item.isHash ? `${item.label} (Phase 2)` : item.label}
+              title={item.label}
               aria-label={item.label}
             >
               <Icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${item.isPost && !isActive ? 'text-idle-gold' : ''
@@ -85,7 +80,7 @@ export const SidebarNav = () => {
               <span className="text-[10px] font-semibold text-center leading-tight whitespace-nowrap">
                 {item.label}
               </span>
-            </a>
+            </button>
           );
         })}
       </div>

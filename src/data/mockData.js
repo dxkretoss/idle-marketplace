@@ -429,6 +429,55 @@ export const DEMO_STORIES = [
   }
 ];
 
+export const REEL_CATEGORIES = [
+  { id: 'All', label: 'All Reels', desc: 'Browse all local stories' },
+  { id: 'Fashion', label: 'Fashion & Shopping', desc: 'Outfits, stylist reveals & luxury wear' },
+  { id: 'Equipment', label: 'Tools & Equipment', desc: 'Heavy machinery, power tools & walkarounds' },
+  { id: 'Home Services', label: 'Home Services', desc: 'Handymen, custom installations & living' },
+  { id: 'Creators', label: 'Tech & Creators', desc: 'Cinema kits, camera rigs & sound gear' },
+  { id: 'Fitness', label: 'Fitness & Health', desc: 'Form demos, coaching & mobility' },
+  { id: 'Work Crews', label: 'Work Crews & Logistics', desc: 'Office moves, fleet & dispatch' },
+  { id: 'Enterprise', label: 'Enterprise & Spaces', desc: 'Boardrooms, commercial studios & spaces' },
+  { id: 'Events', label: 'Events & Experiences', desc: 'Canopies, lighting & banquet setups' }
+];
+
+export const matchesReelCategory = (reelCategory, filterId) => {
+  if (!filterId || filterId === 'All') return true;
+  if (!reelCategory) return false;
+
+  const rCat = reelCategory.toLowerCase().trim();
+  const fId = filterId.toLowerCase().trim();
+
+  if (rCat === fId) return true;
+
+  if (fId === 'fashion' || fId === 'shopping') {
+    return rCat.includes('fashion') || rCat.includes('shop') || rCat.includes('wardrobe');
+  }
+  if (fId === 'equipment' || fId === 'tools') {
+    return rCat.includes('equipment') || rCat.includes('tool') || rCat.includes('machinery');
+  }
+  if (fId === 'home services' || fId === 'home' || fId === 'services') {
+    return rCat.includes('home') || rCat.includes('service') || rCat.includes('handyman') || rCat.includes('repair');
+  }
+  if (fId === 'creators' || fId === 'electronics' || fId === 'tech') {
+    return rCat.includes('creator') || rCat.includes('cinema') || rCat.includes('camera') || rCat.includes('tech') || rCat.includes('media');
+  }
+  if (fId === 'work crews' || fId === 'crews' || fId === 'vehicles') {
+    return rCat.includes('crew') || rCat.includes('move') || rCat.includes('logistic') || rCat.includes('truck') || rCat.includes('vehicle');
+  }
+  if (fId === 'enterprise') {
+    return rCat.includes('enterprise') || rCat.includes('workspace') || rCat.includes('office') || rCat.includes('boardroom');
+  }
+  if (fId === 'fitness') {
+    return rCat.includes('fit') || rCat.includes('health') || rCat.includes('workout') || rCat.includes('trainer');
+  }
+  if (fId === 'events') {
+    return rCat.includes('event') || rCat.includes('party') || rCat.includes('wedding') || rCat.includes('canopy');
+  }
+
+  return rCat.includes(fId);
+};
+
 export const RESOURCE_GUIDES = [
   {
     id: 'membership',

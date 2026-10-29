@@ -85,68 +85,22 @@ const HERO_SHOWCASES = [
   }
 ];
 
-const TESTIMONIALS = [
-  {
-    id: 1,
-    name: 'Marcus Vance',
-    role: 'Master Carpenter & Equipment Owner',
-    location: 'Frisco, TX',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
-    itemRented: 'Kubota Mini Excavator & DeWalt Suite',
-    metric: 'Earned $3,500+ with 0% platform fee',
-    rating: 5,
-    quote: 'I rented my excavator and professional toolkits 14 times this season. Traditional broker sites take 20% to 25%, but with IDLE I kept every single dollar. The single-use QR handoff gives me ironclad photo proof before equipment leaves my yard.'
-  },
-  {
-    id: 2,
-    name: 'Maya Lin',
-    role: 'Creative Director · Maya Studios',
-    location: 'Plano, TX',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-    itemRented: 'Sony Alpha FX3 Cinema Package',
-    metric: 'Saved $450 on weekend film shoot',
-    rating: 5,
-    quote: 'Finding cinema equipment on a Saturday morning in Plano used to be impossible. Being able to watch a 24-hour video reel of the exact camera running before booking gave our crew complete confidence. Pickup took 3 minutes with the QR code.'
-  },
-  {
-    id: 3,
-    name: 'Devon Hayes',
-    role: 'General Contractor · Hayes Fleet',
-    location: 'Dallas, TX',
-    avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&q=80',
-    itemRented: 'Enterprise Fleet & Skid Steer',
-    metric: 'Dispatched 4 crews across 3 job sites',
-    rating: 5,
-    quote: 'We use the Enterprise Workspace tier daily. When my subcontractors pick up trailers or heavy machinery, the mandatory QR photo checklist ensures everyone is accountable. No more disputes over scratched fenders.'
-  },
-  {
-    id: 4,
-    name: 'Sarah Jenkins',
-    role: 'Event Designer · Velvet & Oak',
-    location: 'Fort Worth, TX',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80',
-    itemRented: 'Velvet Lounge Furniture & Arch Kits',
-    metric: '100% On-time return & deposit release',
-    rating: 5,
-    quote: 'IDLE connects real local professionals without the anonymous junk you find on Craigslist. The identity verification and instant escrow deposit make luxury rentals effortless and totally safe.'
-  }
-];
 
 const FAQS = [
   {
     category: 'QR Handoffs',
     question: "How does the Single-Use QR Custody Handoff work?",
-    answer: "When a reservation is confirmed, IDLE generates an encrypted, single-use QR token for that specific transaction. When the owner and renter meet for pickup, both scan the code in the IDLE web app, snap 4 mandatory condition photos, and confirm handoff. This activates the $25,000 protection guarantee and timestamps custody transfer into a permanent digital ledger."
+    answer: "When a reservation is confirmed, IDLE generates an encrypted, single-use QR token for that specific transaction. When the owner and renter meet for pickup, both scan the code in the IDLE web app, snap 4 mandatory condition photos, and confirm handoff. This records physical custody transfer and condition photos into a permanent digital log."
   },
   {
     category: 'Pricing',
-    question: "How can IDLE offer 0% transaction commission?",
-    answer: "Traditional marketplaces charge between 15% and 30% on every single booking. IDLE operates on a transparent, predictable membership model (Free for casual search, Trade at $15/mo, and Business at $29/mo). Because we don't take a percentage cut, owners and renters keep 100% of the agreed rental rate."
+    question: "How do IDLE membership plans work?",
+    answer: "IDLE offers transparent, predictable membership tiers (Free for casual search and community requests, Trade at $15/mo, and Business at $29/mo). Paid tiers unlock unlimited listings, 24-hour promotional Reels, and direct messaging."
   },
   {
     category: 'Protection',
     question: "What happens if equipment is damaged or returned late?",
-    answer: "Every verified QR handoff requires timestamped condition photos at pickup and return. In the rare event of damage, our dispute team compares the cryptographic photo records against the pre-authorized security deposit and IDLE Custody Guarantee, resolving claims within 24 to 48 hours."
+    answer: "Every verified QR handoff requires timestamped condition photos at pickup and return. In the rare event of damage or late returns, the timestamped photo records and pre-authorized security deposit hold provide clear documentation for both parties to resolve the matter directly or through dispute mediation."
   },
   {
     category: 'Reels',
@@ -166,11 +120,12 @@ const FAQS = [
 ];
 
 export const HomeView = () => {
-  const { setRoute, setCategory, listings, setActiveListing } = useApp();
+  const { setRoute, setCategory, listings, setActiveListing, user } = useApp();
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [activeShowcaseId, setActiveShowcaseId] = useState('cinema');
   const [openFaqIndex, setOpenFaqIndex] = useState(0);
   const [faqCategory, setFaqCategory] = useState('All');
+  const [feedFilter, setFeedFilter] = useState('personalized'); // 'personalized' | 'all'
 
   const activeShowcase = HERO_SHOWCASES.find(s => s.id === activeShowcaseId) || HERO_SHOWCASES[0];
 
@@ -179,7 +134,25 @@ export const HomeView = () => {
     setRoute('explore');
   };
 
-  const featuredListings = listings.slice(0, 8);
+  // User interest personalization
+  const userInterests = (user?.interests && user?.interests.length > 0) ? user.interests : [];
+  const hasSpecificInterests = userInterests.length > 0 && !userInterests.includes('All') && userInterests.length < 10;
+  const isPersonalized = feedFilter === 'personalized' && hasSpecificInterests;
+
+  // Filter listings according to user's selected interests
+  const personalizedListings = isPersonalized
+    ? listings.filter(l => userInterests.includes(l.category))
+    : listings;
+  const featuredListings = (personalizedListings.length > 0 ? personalizedListings : listings).slice(0, 8);
+
+  // Prioritize categories matching user interests to the front
+  const sortedCategories = [...CATEGORIES.filter(c => c.id !== 'All')].sort((a, b) => {
+    const aMatch = userInterests.includes(a.id);
+    const bMatch = userInterests.includes(b.id);
+    if (aMatch && !bMatch) return -1;
+    if (!aMatch && bMatch) return 1;
+    return 0;
+  });
 
   return (
     <div className="space-y-10">
@@ -205,7 +178,7 @@ export const HomeView = () => {
               <span className="text-idle-goldLight italic font-normal">you own.</span>
             </h1>
             <p className="text-xs sm:text-sm md:text-base text-emerald-100/90 leading-relaxed max-w-md">
-              Rent. Lend. Get help. Earn. A social-first local marketplace for equipment, skills, and business teams with zero transaction commissions.
+              Rent. Lend. Get help. Earn. A social-first local marketplace for equipment, skills, and business teams.
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -235,13 +208,13 @@ export const HomeView = () => {
               {/* Floating Top Badge */}
               <div className="absolute -top-3.5 left-5 z-20 px-3.5 py-1 rounded-full bg-[#022822] border border-idle-gold/60 shadow-xl flex items-center gap-1.5 text-[11px] font-extrabold text-idle-goldLight tracking-wide">
                 <Zap className="w-3.5 h-3.5 text-idle-gold fill-idle-gold" />
-                <span>0% Commission · Direct P2P</span>
+                <span>Verified Members · Direct P2P</span>
               </div>
 
               {/* Floating Bottom Badge */}
               <div className="absolute -bottom-3.5 right-5 z-20 px-3.5 py-1 rounded-full bg-[#02251f] border border-emerald-400/40 shadow-xl flex items-center gap-1.5 text-[10px] font-bold text-emerald-200">
                 <ShieldCheck className="w-3.5 h-3.5 text-idle-gold" />
-                <span>$10,000 Custody Guarantee</span>
+                <span>Verified Photo Stamping</span>
               </div>
 
               {/* Main Frosted Glass Card */}
@@ -398,8 +371,8 @@ export const HomeView = () => {
             <Zap className="w-5 h-5 text-idle-emerald" />
           </div>
           <div className="min-w-0">
-            <div className="text-sm sm:text-base font-extrabold text-[#003d36] leading-tight truncate">0% Commission</div>
-            <div className="text-[11px] text-idle-muted mt-0.5 leading-tight truncate">Keep 100% of earnings</div>
+            <div className="text-sm sm:text-base font-extrabold text-[#003d36] leading-tight truncate">Direct P2P</div>
+            <div className="text-[11px] text-idle-muted mt-0.5 leading-tight truncate">Connect with verified locals</div>
           </div>
         </div>
 
@@ -408,8 +381,8 @@ export const HomeView = () => {
             <ShieldCheck className="w-5 h-5 text-idle-gold" />
           </div>
           <div className="min-w-0">
-            <div className="text-sm sm:text-base font-extrabold text-[#003d36] leading-tight truncate">$25,000 Guarantee</div>
-            <div className="text-[11px] text-idle-muted mt-0.5 leading-tight truncate">Every handoff protected</div>
+            <div className="text-sm sm:text-base font-extrabold text-[#003d36] leading-tight truncate">User Due Diligence</div>
+            <div className="text-[11px] text-idle-muted mt-0.5 leading-tight truncate">Direct verification & ratings</div>
           </div>
         </div>
 
@@ -480,7 +453,7 @@ export const HomeView = () => {
             </div>
             <h3 className="font-bold text-base text-white">Scan Single-Use QR at Pickup</h3>
             <p className="text-xs text-emerald-200/75 leading-relaxed">
-              Meet in person and scan the encrypted QR pass. Both parties capture 4 condition photos to lock custody and activate the $25k guarantee.
+              Meet in person and scan the encrypted QR pass. Both parties capture 4 condition photos to verify physical item condition and record custody handoff.
             </p>
           </div>
 
@@ -492,9 +465,9 @@ export const HomeView = () => {
                 Auto-Release
               </span>
             </div>
-            <h3 className="font-bold text-base text-white">Return & Complete with 100% Payout</h3>
+            <h3 className="font-bold text-base text-white">Return & Complete Transfer</h3>
             <p className="text-xs text-emerald-200/75 leading-relaxed">
-              Scan the return token at drop-off. Security deposits auto-release and 100% of the rental fee transfers directly to the owner.
+              Scan the return token at drop-off. Security deposit holds release and completed payment transfers directly to the provider.
             </p>
           </div>
         </div>
@@ -525,50 +498,98 @@ export const HomeView = () => {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
-          {CATEGORIES.filter(c => c.id !== 'All').map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => handleCategoryClick(cat.id)}
-              className="glass-card glass-card-hover p-2.5 rounded-2xl flex flex-col text-left group overflow-hidden"
-            >
-              <div className="h-28 rounded-xl overflow-hidden bg-emerald-950/10 mb-2">
-                <img
-                  src={cat.image}
-                  alt={cat.label}
-                  loading="lazy"
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                />
-              </div>
-              <strong className="text-xs font-bold text-[#112d26] group-hover:text-idle-emerald line-clamp-1">
-                {cat.label}
-              </strong>
-              <p className="text-[10px] text-idle-muted line-clamp-1 mt-0.5">
-                {cat.description}
-              </p>
-            </button>
-          ))}
+          {sortedCategories.map((cat) => {
+            const isPreferred = hasSpecificInterests && userInterests.includes(cat.id);
+            return (
+              <button
+                key={cat.id}
+                onClick={() => handleCategoryClick(cat.id)}
+                className={`glass-card glass-card-hover p-2.5 rounded-2xl flex flex-col text-left group overflow-hidden relative cursor-pointer ${
+                  isPreferred ? 'border-idle-emerald/40 bg-idle-mint/20' : ''
+                }`}
+              >
+                <div className="h-28 rounded-xl overflow-hidden bg-emerald-950/10 mb-2 relative">
+                  <img
+                    src={cat.image}
+                    alt={cat.label}
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                  {isPreferred && (
+                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-[#003d36]/90 backdrop-blur-xs text-[9px] font-bold text-idle-gold border border-idle-gold/40 shadow-xs flex items-center gap-1">
+                      <span>★</span>
+                      <span>Preferred</span>
+                    </span>
+                  )}
+                </div>
+                <strong className="text-xs font-bold text-[#112d26] group-hover:text-idle-emerald line-clamp-1">
+                  {cat.label}
+                </strong>
+                <p className="text-[10px] text-idle-muted line-clamp-1 mt-0.5">
+                  {cat.description}
+                </p>
+              </button>
+            );
+          })}
         </div>
       </section>
 
       {/* Featured Listings Grid */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-idle-gold block">
-              Curated for Discovery
-            </span>
-            <h2 className="font-serif text-xl md:text-2xl font-bold text-[#082f2c] flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-idle-gold block">
+                Curated for Discovery
+              </span>
+              {hasSpecificInterests && isPersonalized && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-idle-mint text-idle-emerald font-bold border border-idle-emerald/20">
+                  Tailored to your interests
+                </span>
+              )}
+            </div>
+            <h2 className="font-serif text-xl md:text-2xl font-bold text-[#082f2c] flex items-center gap-2 mt-0.5">
               <span className="w-1.5 h-5 rounded-full bg-idle-emerald inline-block" />
-              Featured Near You
+              {isPersonalized ? 'Recommended for You' : 'Featured Near You'}
             </h2>
           </div>
-          <button
-            onClick={() => setRoute('explore')}
-            className="text-xs font-bold text-idle-emerald hover:text-idle-teal transition-colors flex items-center gap-1"
-          >
-            <span>View all listings</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
+
+          <div className="flex items-center gap-3">
+            {hasSpecificInterests && (
+              <div className="flex items-center p-1 bg-white border border-[#dce6e0] rounded-xl shadow-xs text-xs">
+                <button
+                  type="button"
+                  onClick={() => setFeedFilter('personalized')}
+                  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                    isPersonalized
+                      ? 'bg-idle-emerald text-white shadow-xs'
+                      : 'text-idle-muted hover:text-[#172d28]'
+                  }`}
+                >
+                  My Interests ({userInterests.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFeedFilter('all')}
+                  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                    !isPersonalized
+                      ? 'bg-idle-emerald text-white shadow-xs'
+                      : 'text-idle-muted hover:text-[#172d28]'
+                  }`}
+                >
+                  All Items
+                </button>
+              </div>
+            )}
+
+            <button
+              onClick={() => setRoute('explore')}
+              className="text-xs font-bold text-idle-emerald hover:text-idle-teal transition-colors flex items-center gap-1 cursor-pointer"
+            >
+              <span>View all listings</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -639,13 +660,13 @@ export const HomeView = () => {
       <section className="rounded-3xl p-6 md:p-8 bg-gradient-to-r from-[#003d36] via-[#004f46] to-[#0c6559] text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl border border-white/10">
         <div className="space-y-2 max-w-xl">
           <span className="text-[10px] uppercase font-extrabold tracking-widest text-idle-gold block">
-            Zero Commission Marketplace
+            Flexible Membership Tiers
           </span>
           <h2 className="font-serif text-2xl md:text-3xl font-bold">
             Browse free. Earn with Trade.
           </h2>
           <p className="text-xs md:text-sm text-emerald-100/90 leading-relaxed">
-            Free members can search and submit requests. Unlock unlimited listings, 24h promotional Reels, and direct paid member chat starting at $15/month with zero cut taken from your earnings.
+            Free members can search and submit requests. Unlock unlimited listings, 24h promotional Reels, and direct paid member chat starting at $15/month with full directory and networking tools.
           </p>
         </div>
         <button
@@ -655,81 +676,6 @@ export const HomeView = () => {
           <Crown className="w-4 h-4 stroke-[2.2]" />
           <span>Compare Memberships</span>
         </button>
-      </section>
-
-      {/* ================= TESTIMONIALS SECTION ================= */}
-      <section className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-idle-gold block">
-              Verified North Texas Community
-            </span>
-            <h2 className="font-serif text-2xl md:text-3xl font-bold text-[#082f2c] flex items-center gap-2">
-              <span className="w-1.5 h-6 rounded-full bg-idle-emerald inline-block" />
-              What DFW Owners & Crews Say
-            </h2>
-            <p className="text-xs sm:text-sm text-idle-muted mt-1 max-w-xl">
-              From Frisco general contractors to Plano film crews, hear how neighbors earn more and save with zero platform cuts.
-            </p>
-          </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-idle-mint text-idle-emerald text-xs font-bold self-start sm:self-auto border border-idle-emerald/15">
-            <ShieldCheck className="w-4 h-4 text-idle-emerald" />
-            <span>100% Verified Local Exchanges</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-          {TESTIMONIALS.map((t) => (
-            <div 
-              key={t.id}
-              className="p-5 sm:p-6 rounded-3xl bg-white border border-[#dce6e0] shadow-sm hover:shadow-md hover:border-idle-emerald/30 transition-all space-y-4 relative group"
-            >
-              {/* Header: Avatar, Name, Location & Stars */}
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={t.avatar}
-                    alt={t.name}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-idle-gold/70 shadow-sm flex-shrink-0"
-                  />
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-sm text-[#003d36]">{t.name}</span>
-                      <CheckCircle2 className="w-3.5 h-3.5 text-idle-gold flex-shrink-0" />
-                    </div>
-                    <span className="text-[11px] text-idle-muted block leading-tight">{t.role}</span>
-                    <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1 mt-0.5">
-                      <MapPin className="w-3 h-3 text-idle-gold" />
-                      <span>{t.location}</span>
-                    </span>
-                  </div>
-                </div>
-
-                {/* 5-Star Rating */}
-                <div className="flex items-center gap-0.5 text-idle-gold">
-                  {[...Array(t.rating)].map((_, i) => (
-                    <Star key={i} className="w-3.5 h-3.5 fill-idle-gold text-idle-gold" />
-                  ))}
-                </div>
-              </div>
-
-              {/* Quote text */}
-              <p className="text-xs sm:text-sm text-[#183a32] leading-relaxed italic">
-                "{t.quote}"
-              </p>
-
-              {/* Bottom metadata tags */}
-              <div className="pt-2 border-t border-[#edf2ee] flex flex-wrap items-center justify-between gap-2 text-[11px]">
-                <span className="text-idle-muted">
-                  Exchanged: <strong className="text-[#003d36] font-semibold">{t.itemRented}</strong>
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full bg-idle-mint text-idle-emerald font-extrabold text-[10px] border border-idle-emerald/20">
-                  {t.metric}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
       </section>
 
       {/* ================= FAQS SECTION ================= */}
@@ -742,7 +688,7 @@ export const HomeView = () => {
             Frequently Asked Questions
           </h2>
           <p className="text-xs sm:text-sm text-idle-muted leading-relaxed">
-            Everything you need to know about Single-Use QR Handoffs, zero transaction commissions, and the $25,000 protection guarantee.
+            Everything you need to know about Single-Use QR Handoffs, membership options, and custody verifications.
           </p>
 
           {/* FAQ Category Pills */}

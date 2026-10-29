@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  INITIAL_LISTINGS, 
-  DEMO_STORIES, 
-  INITIAL_ENTERPRISE_TEAM, 
-  INITIAL_ENTERPRISE_TASKS 
+import {
+  INITIAL_LISTINGS,
+  DEMO_STORIES,
+  INITIAL_ENTERPRISE_TEAM,
+  INITIAL_ENTERPRISE_TASKS
 } from '../data/mockData';
 
 const AppContext = createContext(null);
@@ -30,8 +30,8 @@ export const AppProvider = ({ children }) => {
 
   const savedState = loadInitialState();
 
-  const VALID_ROUTES = ['home', 'explore', 'reels', 'post', 'messages', 'transactions', 'enterprise', 'resources', 'membership', 'profile', 'journey', 'auth', 'privacy', 'terms', 'contact'];
-  const PHASE_2_ROUTES = ['transactions', 'enterprise', 'resources'];
+  const VALID_ROUTES = ['home', 'explore', 'reels', 'post', 'messages', 'transactions', 'bookings', 'enterprise', 'resources', 'membership', 'profile', 'journey', 'auth', 'privacy', 'terms', 'contact'];
+  const PHASE_2_ROUTES = [];
 
   const getInitialRoute = () => {
     // Check clean pathname first (e.g. /post, /explore)
@@ -73,7 +73,8 @@ export const AppProvider = ({ children }) => {
       joined: true,
       avatar: 'AM',
       avatarUrl: DEFAULT_AVATAR_URL,
-      notifications: true
+      notifications: true,
+      interests: savedState?.user?.interests || ['Home', 'Tools', 'Electronics', 'Services']
     };
     if (savedState?.user) {
       return {
@@ -119,6 +120,7 @@ export const AppProvider = ({ children }) => {
       email: userData.email || prev.email,
       area: userData.area || prev.area,
       plan: userData.plan || 'Free',
+      interests: (userData.interests && userData.interests.length > 0) ? userData.interests : (prev.interests || ['Home', 'Tools', 'Electronics', 'Services']),
       avatar: (userData.name || 'AM').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
     }));
     if (userData.plan) {
@@ -134,6 +136,14 @@ export const AppProvider = ({ children }) => {
     setRoute('home');
   };
 
+  const updateInterests = (newInterests) => {
+    setUser(prev => ({
+      ...prev,
+      interests: newInterests
+    }));
+    addToast('Your feed preferences have been updated!', 'success');
+  };
+
   // Search & Exploration Filters
   const [search, setSearch] = useState(savedState?.search || '');
   const [category, setCategory] = useState(savedState?.category || 'All');
@@ -144,6 +154,7 @@ export const AppProvider = ({ children }) => {
   const [listings, setListings] = useState(savedState?.listings || INITIAL_LISTINGS);
   const [likes, setLikes] = useState(savedState?.likes || [1, 2, 5]);
   const [reels, setReels] = useState(savedState?.reels || DEMO_STORIES);
+  const [reelsFilter, setReelsFilter] = useState('All');
 
   // Modals & Active Selections
   const [activeReel, setActiveReel] = useState(null);
@@ -410,7 +421,6 @@ export const AppProvider = ({ children }) => {
       }
       return t;
     }));
-    addToast('Message sent to provider', 'info');
   };
 
   // Enterprise team actions
@@ -483,6 +493,7 @@ export const AppProvider = ({ children }) => {
       login,
       signup,
       logout,
+      updateInterests,
       user,
       setUser,
       setUserLocation,
@@ -502,6 +513,8 @@ export const AppProvider = ({ children }) => {
       addListing,
       removeListing,
       reels,
+      reelsFilter,
+      setReelsFilter,
       addReel,
       activeReel,
       setActiveReel,

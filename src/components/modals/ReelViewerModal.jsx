@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
+import { matchesReelCategory } from '../../data/mockData';
 import { 
   X, 
   Heart, 
@@ -9,7 +10,8 @@ import {
   Clock, 
   ArrowRight,
   Sparkles,
-  MapPin
+  MapPin,
+  Tag
 } from 'lucide-react';
 
 export const ReelViewerModal = () => {
@@ -17,6 +19,8 @@ export const ReelViewerModal = () => {
     activeReel, 
     setActiveReel, 
     reels, 
+    reelsFilter,
+    user,
     setActiveListing, 
     listings, 
     addToast 
@@ -25,8 +29,24 @@ export const ReelViewerModal = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  // Find index in reels list
-  const currentIndex = reels.findIndex(r => r.id === activeReel?.id);
+  // Filter current playlist by active category so shopping reels never show equipment on Next/Prev
+  const isPersonalized = reelsFilter === 'ForYou';
+  const userInterests = user?.interests || [];
+
+  const playlist = reels.filter((r) => {
+    if (!reelsFilter || reelsFilter === 'All') return true;
+    if (isPersonalized) {
+      if (userInterests.length === 0 || userInterests.includes('All')) return true;
+      return userInterests.some(interest => matchesReelCategory(r.category, interest));
+    }
+    return matchesReelCategory(r.category, reelsFilter);
+  });
+
+  const currentPlaylist = playlist.some(r => r.id === activeReel?.id)
+    ? playlist
+    : (activeReel ? [activeReel, ...playlist.filter(r => r.id !== activeReel?.id)] : playlist);
+
+  const currentIndex = currentPlaylist.findIndex(r => r.id === activeReel?.id);
 
   // Simulated story progress timer
   useEffect(() => {
@@ -49,18 +69,18 @@ export const ReelViewerModal = () => {
   if (!activeReel) return null;
 
   const handleNext = () => {
-    if (currentIndex < reels.length - 1) {
-      setActiveReel(reels[currentIndex + 1]);
-    } else {
-      setActiveReel(reels[0]);
+    if (currentIndex >= 0 && currentIndex < currentPlaylist.length - 1) {
+      setActiveReel(currentPlaylist[currentIndex + 1]);
+    } else if (currentPlaylist.length > 0) {
+      setActiveReel(currentPlaylist[0]);
     }
   };
 
   const handlePrev = () => {
     if (currentIndex > 0) {
-      setActiveReel(reels[currentIndex - 1]);
-    } else {
-      setActiveReel(reels[reels.length - 1]);
+      setActiveReel(currentPlaylist[currentIndex - 1]);
+    } else if (currentPlaylist.length > 0) {
+      setActiveReel(currentPlaylist[currentPlaylist.length - 1]);
     }
   };
 
@@ -93,14 +113,18 @@ export const ReelViewerModal = () => {
         className="relative w-full md:max-w-md h-full md:h-[88vh] bg-black md:rounded-3xl overflow-hidden shadow-2xl flex flex-col border border-white/10"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Progress Bar */}
+        {/* Segmented Story Progress Bars */}
         <div className="absolute top-0 left-0 right-0 z-30 p-3 flex gap-1">
-          <div className="h-1 flex-1 bg-white/30 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-idle-gold transition-all duration-100 ease-linear rounded-full"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+          {currentPlaylist.slice(0, 10).map((item, idx) => (
+            <div key={item.id} className="h-1 flex-1 bg-white/30 rounded-full overflow-hidden">
+              <div 
+                className={`h-full bg-idle-gold transition-all duration-100 ease-linear rounded-full ${
+                  idx < currentIndex ? 'w-full' : idx === currentIndex ? '' : 'w-0'
+                }`}
+                style={idx === currentIndex ? { width: `${progress}%` } : {}}
+              />
+            </div>
+          ))}
         </div>
 
         {/* Top Header */}
@@ -110,14 +134,27 @@ export const ReelViewerModal = () => {
               {activeReel.author?.[0] || 'I'}
             </div>
             <div>
-              <strong className="text-xs md:text-sm font-bold block leading-tight">{activeReel.author}</strong>
-              <div className="flex items-center gap-1.5 text-[10px] text-emerald-200">
+              <div className="flex items-center gap-2">
+                <strong className="text-xs md:text-sm font-bold block leading-tight truncate max-w-[130px]">{activeReel.author}</strong>
+                <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-idle-gold/25 text-idle-gold border border-idle-gold/40">
+                  {activeReel.category}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[10px] text-emerald-200 mt-0.5">
                 <MapPin className="w-3 h-3 text-idle-gold" />
                 <span>{activeReel.area}</span>
                 <span>·</span>
                 <span className="flex items-center gap-0.5 text-idle-goldLight font-semibold">
                   <Clock className="w-2.5 h-2.5" /> {hoursLeft}h left
                 </span>
+                {currentPlaylist.length > 1 && (
+                  <>
+                    <span>·</span>
+                    <span className="text-[10px] text-white/80 font-medium">
+                      {currentIndex + 1}/{currentPlaylist.length}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>

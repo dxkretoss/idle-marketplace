@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { CATEGORIES } from '../data/mockData';
 import {
   Lock,
   Mail,
@@ -63,6 +64,8 @@ export const AuthView = () => {
   const [name, setName] = useState('');
   const [area, setArea] = useState('Frisco, TX');
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [signupStep, setSignupStep] = useState(1);
+  const [selectedInterests, setSelectedInterests] = useState(['Home', 'Tools']);
 
   // Location Dropdown States
   const [isLocationOpen, setIsLocationOpen] = useState(false);
@@ -88,16 +91,56 @@ export const AuthView = () => {
     login(email || 'alex.morgan@example.com', password || 'password123');
   };
 
-  const handleSignUp = (e) => {
+  const handleStep1Submit = (e) => {
     e.preventDefault();
+    if (!name.trim()) {
+      addToast('Please enter your full name', 'error');
+      return;
+    }
+    if (!email.trim()) {
+      addToast('Please enter your email', 'error');
+      return;
+    }
+    if (!password || password.length < 6) {
+      addToast('Password must be at least 6 characters', 'error');
+      return;
+    }
     if (!termsAccepted) {
       addToast('Please accept the IDLE community terms', 'error');
       return;
     }
+    setSignupStep(2);
+  };
+
+  const toggleInterest = (catId) => {
+    setSelectedInterests(prev => {
+      if (prev.includes(catId)) {
+        return prev.filter(id => id !== catId);
+      } else {
+        return [...prev, catId];
+      }
+    });
+  };
+
+  const handleSelectAllInterests = () => {
+    const allIds = CATEGORIES.filter(c => c.id !== 'All').map(c => c.id);
+    setSelectedInterests(allIds);
+  };
+
+  const handleClearInterests = () => {
+    setSelectedInterests([]);
+  };
+
+  const handleCompleteSignUp = (skipInterests = false) => {
+    const finalInterests = skipInterests || selectedInterests.length === 0
+      ? CATEGORIES.filter(c => c.id !== 'All').map(c => c.id)
+      : selectedInterests;
+
     signup({
       name,
       email,
       area,
+      interests: finalInterests,
       plan: 'Free'
     });
   };
@@ -106,6 +149,7 @@ export const AuthView = () => {
     e.preventDefault();
     addToast(`Password recovery link sent to ${email || 'your email'}!`, 'info');
     setMode('signin');
+    setSignupStep(1);
   };
 
   return (
@@ -138,12 +182,12 @@ export const AuthView = () => {
             />
             <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#003d36]">
               {mode === 'signin' && 'Welcome back to IDLE'}
-              {mode === 'signup' && 'Create your IDLE account'}
+              {mode === 'signup' && (signupStep === 1 ? 'Create your IDLE account' : 'Personalize your feed')}
               {mode === 'forgot' && 'Reset your password'}
             </h1>
             <p className="text-xs sm:text-sm text-idle-muted mt-1 leading-relaxed">
               {mode === 'signin' && 'Sign in to access your local rentals, negotiations, and single-use QR custody handoffs.'}
-              {mode === 'signup' && 'Join the social-first marketplace for equipment, skills, and teams with zero commission.'}
+              {mode === 'signup' && (signupStep === 1 ? 'Join the social-first marketplace for equipment, skills, and business teams.' : 'Tell us what you are looking for so we show you the most relevant local items.')}
               {mode === 'forgot' && 'Enter your registered email and we will send a secure Supabase recovery link.'}
             </p>
           </div>
@@ -153,7 +197,7 @@ export const AuthView = () => {
             <div className="flex p-1 bg-[#f0f5f2] rounded-2xl border border-idle-line">
               <button
                 type="button"
-                onClick={() => setMode('signin')}
+                onClick={() => { setMode('signin'); setSignupStep(1); }}
                 className={`flex-1 py-2 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${mode === 'signin'
                   ? 'bg-idle-emerald text-white shadow-sm'
                   : 'text-idle-muted hover:text-[#172d28]'
@@ -163,7 +207,7 @@ export const AuthView = () => {
               </button>
               <button
                 type="button"
-                onClick={() => setMode('signup')}
+                onClick={() => { setMode('signup'); setSignupStep(1); }}
                 className={`flex-1 py-2 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${mode === 'signup'
                   ? 'bg-idle-emerald text-white shadow-sm'
                   : 'text-idle-muted hover:text-[#172d28]'
@@ -244,9 +288,17 @@ export const AuthView = () => {
             </form>
           )}
 
-          {/* ================= SIGN UP FORM ================= */}
-          {mode === 'signup' && (
-            <form onSubmit={handleSignUp} className="space-y-4 text-xs sm:text-sm">
+          {/* ================= SIGN UP FORM (2-STEP ONBOARDING) ================= */}
+          {mode === 'signup' && signupStep === 1 && (
+            <form onSubmit={handleStep1Submit} className="space-y-4 text-xs sm:text-sm">
+              <div className="flex items-center justify-between pb-1">
+                <span className="font-bold text-[#003d36] flex items-center gap-1.5 text-xs">
+                  <span className="w-5 h-5 rounded-full bg-idle-emerald text-white text-[11px] flex items-center justify-center font-bold">1</span>
+                  <span>Account Credentials</span>
+                </span>
+                <span className="text-[11px] font-semibold text-idle-muted">Step 1 of 2</span>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-[#172d28] mb-1.5">
                   Full Name / Business Name
@@ -389,7 +441,7 @@ export const AuthView = () => {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="At least 8 characters"
+                    placeholder="At least 6 characters"
                     className="w-full pl-10 pr-11 py-3.5 rounded-2xl border border-[#d2e0d8] bg-[#edf3f0] hover:bg-[#e7efea] focus:bg-white focus:border-idle-emerald focus:ring-2 focus:ring-idle-emerald/15 focus:shadow-none outline-none transition-all shadow-inner text-[#172d28] placeholder:text-[#8ba096] text-xs sm:text-sm font-medium"
                   />
                   <button
@@ -411,19 +463,129 @@ export const AuthView = () => {
                   className="mt-0.5 rounded text-idle-emerald focus:ring-idle-emerald"
                 />
                 <span>
-                  I agree to IDLE's Terms of Service, single-use QR custody verification rules, and zero-commission subscription policies.
+                  I agree to IDLE's Terms of Service and single-use QR custody verification protocols.
                 </span>
               </label>
 
               <button
                 type="submit"
                 disabled={!termsAccepted}
-                className="gold-gradient-btn w-full py-3.5 rounded-xl text-sm font-bold shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="gold-gradient-btn w-full py-3.5 rounded-xl text-sm font-bold shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
-                <UserPlus className="w-4 h-4" />
-                <span>Create My IDLE Account</span>
+                <span>Continue to Interests & Preferences</span>
+                <ArrowRight className="w-4 h-4" />
               </button>
             </form>
+          )}
+
+          {/* ================= SIGN UP STEP 2: FIVERR-STYLE INTEREST PICKER ================= */}
+          {mode === 'signup' && signupStep === 2 && (
+            <div className="space-y-4 text-xs sm:text-sm animate-in fade-in duration-200">
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#003d36] flex items-center gap-1.5 text-xs">
+                    <span className="w-5 h-5 rounded-full bg-idle-emerald text-white text-[11px] flex items-center justify-center font-bold">2</span>
+                    <span>What are you looking for?</span>
+                  </span>
+                  <span className="text-[11px] font-semibold text-idle-muted">Step 2 of 2</span>
+                </div>
+                <p className="text-[11px] text-idle-muted leading-tight">
+                  Choose the categories you are interested in. We will customize your homepage feed so you only see what you care about.
+                </p>
+              </div>
+
+              {/* Selection Bar & Controls */}
+              <div className="flex items-center justify-between text-xs py-1 border-y border-idle-line">
+                <span className="text-[11px] font-bold text-[#172d28]">
+                  {selectedInterests.length} selected
+                </span>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleSelectAllInterests}
+                    className="text-[11px] font-bold text-idle-emerald hover:underline cursor-pointer"
+                  >
+                    Select All
+                  </button>
+                  <span className="text-idle-line">|</span>
+                  <button
+                    type="button"
+                    onClick={handleClearInterests}
+                    className="text-[11px] font-semibold text-idle-muted hover:text-[#172d28] cursor-pointer"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              </div>
+
+              {/* Category Cards Grid */}
+              <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-1 no-scrollbar py-0.5">
+                {CATEGORIES.filter(c => c.id !== 'All').map((cat) => {
+                  const isSelected = selectedInterests.includes(cat.id);
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => toggleInterest(cat.id)}
+                      className={`p-2.5 rounded-2xl text-left border transition-all flex flex-col justify-between group cursor-pointer relative ${
+                        isSelected
+                          ? 'bg-idle-mint/60 border-idle-emerald shadow-xs ring-1 ring-idle-emerald/30'
+                          : 'bg-[#edf3f0] hover:bg-white border-[#d2e0d8] text-[#172d28]'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-1.5 w-full">
+                        <div className="w-8 h-8 rounded-xl overflow-hidden bg-emerald-950/10 flex-shrink-0">
+                          <img src={cat.image} alt={cat.label} className="w-full h-full object-cover" />
+                        </div>
+                        <div className={`w-4 h-4 rounded-full flex items-center justify-center border transition-all ${
+                          isSelected ? 'bg-idle-emerald border-idle-emerald text-white' : 'border-[#b5c7bd] bg-white text-transparent'
+                        }`}>
+                          <Check className="w-2.5 h-2.5 stroke-[3]" />
+                        </div>
+                      </div>
+                      <div>
+                        <div className={`text-xs font-bold leading-tight truncate ${isSelected ? 'text-[#003d36]' : 'text-[#172d28]'}`}>
+                          {cat.label}
+                        </div>
+                        <div className="text-[10px] text-idle-muted line-clamp-1 mt-0.5">
+                          {cat.description}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => handleCompleteSignUp(false)}
+                  disabled={selectedInterests.length === 0}
+                  className="gold-gradient-btn w-full py-3.5 rounded-xl text-sm font-bold shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span>Complete & Start Exploring</span>
+                </button>
+                <div className="flex items-center justify-between text-xs pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setSignupStep(1)}
+                    className="text-idle-muted hover:text-[#172d28] font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back to Details</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleCompleteSignUp(true)}
+                    className="text-idle-muted hover:text-idle-emerald font-semibold cursor-pointer"
+                  >
+                    Skip for now
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* ================= FORGOT PASSWORD ================= */}
@@ -457,7 +619,7 @@ export const AuthView = () => {
               <div className="text-center pt-2">
                 <button
                   type="button"
-                  onClick={() => setMode('signin')}
+                  onClick={() => { setMode('signin'); setSignupStep(1); }}
                   className="text-xs font-bold text-idle-emerald hover:underline"
                 >
                   &larr; Back to Sign In
@@ -470,7 +632,7 @@ export const AuthView = () => {
           <div className="mt-6 p-4 rounded-2xl bg-[#f8faf9] border border-idle-line flex items-center gap-3 text-xs text-idle-muted">
             <ShieldCheck className="w-4 h-4 text-idle-emerald flex-shrink-0" />
             <span className="text-[11px] leading-snug">
-              Protected by <strong>IDLE Trust Standards</strong> — Direct member negotiations, verified identities, and single-use QR custody handoffs with zero transaction commission.
+              Protected by <strong>IDLE Trust Standards</strong> — Direct member negotiations, verified identities, and single-use QR custody handoffs.
             </span>
           </div>
         </div>
@@ -522,7 +684,7 @@ export const AuthView = () => {
             "No one and nothing should have to sit idle."
           </h2>
           <p className="text-sm xl:text-base text-emerald-100/90 leading-relaxed max-w-lg">
-            Rent out unused equipment, tools, and space. Offer your professional skills, and coordinate business teams with zero transaction commissions.
+            Rent out unused equipment, tools, and space. Offer your professional skills, and coordinate business teams.
           </p>
         </div>
 
@@ -541,7 +703,7 @@ export const AuthView = () => {
           <div className="glass-dark p-3.5 rounded-2xl border border-white/15 space-y-1">
             <div className='flex gap-2 items-center'>
               <Zap className="w-5 h-5 text-idle-gold" />
-              <strong className="block text-xs font-bold text-white">0% Transaction Cut</strong>
+              <strong className="block text-xs font-bold text-white">Flat Memberships</strong>
             </div>
             <p className="text-[10px] text-emerald-200/70 leading-snug">
               Predictable flat monthly memberships.

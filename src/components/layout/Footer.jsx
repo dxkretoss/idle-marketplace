@@ -1,12 +1,13 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
+import { RESOURCE_GUIDES } from '../../data/mockData';
 import {
   ArrowRight,
   MapPin
 } from 'lucide-react';
 
 export const Footer = () => {
-  const { setRoute, setCategory, addToast } = useApp();
+  const { setRoute, setCategory, setSearch, setUserLocation, setSelectedResource } = useApp();
 
   return (
     <footer className="mt-12 md:mt-16 -mx-4 sm:-mx-6 md:-mx-8 border-t border-emerald-950/20 bg-gradient-to-b from-[#002621] via-[#001f1a] to-[#001411] text-white rounded-t-[32px] md:rounded-t-[36px] rounded-b-none overflow-hidden shadow-2xl relative isolate pb-4 md:pb-4">
@@ -35,7 +36,7 @@ export const Footer = () => {
               </span>
             </div>
             <p className="text-xs text-emerald-200/70 mt-1">
-              The social-first local exchange for equipment, pro skills, and business teams with zero transaction commissions.
+              The social-first local exchange for equipment, pro skills, and business teams.
             </p>
           </div>
 
@@ -110,71 +111,76 @@ export const Footer = () => {
             </ul>
           </div>
 
-          {/* Column 2: Custody & Trust - Locked with # link and Phase 2 notice */}
+          {/* Column 2: Custody & Trust */}
           <div className="space-y-3">
             <h4 className="text-xs font-extrabold uppercase tracking-wider text-idle-gold">
               Custody & Trust
             </h4>
             <ul className="space-y-2 text-xs text-emerald-100/80">
               <li>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    addToast('Single-Use QR Protocol documentation will be available in Phase 2!', 'info');
+                <button
+                  type="button"
+                  onClick={() => {
+                    const guide = RESOURCE_GUIDES.find(g => g.id === 'qr-handoff');
+                    if (guide && setSelectedResource) setSelectedResource(guide);
+                    setRoute('resources');
                   }}
                   className="hover:text-idle-gold transition-colors text-left block cursor-pointer"
                 >
                   Single-Use QR Protocol
-                </a>
+                </button>
               </li>
               <li>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    addToast('$25,000 Protection Guarantee coverage will be available in Phase 2!', 'info');
+                <button
+                  type="button"
+                  onClick={() => {
+                    const guide = RESOURCE_GUIDES.find(g => g.id === 'disputes') || RESOURCE_GUIDES[2];
+                    if (guide && setSelectedResource) setSelectedResource(guide);
+                    setRoute('resources');
                   }}
                   className="hover:text-idle-gold transition-colors text-left block cursor-pointer"
                 >
-                  $25,000 Protection Guarantee
-                </a>
+                  Direct Due Diligence & Disputes
+                </button>
               </li>
               <li>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    addToast('Condition Photo Stamping will be available in Phase 2!', 'info');
+                <button
+                  type="button"
+                  onClick={() => {
+                    const guide = RESOURCE_GUIDES.find(g => g.id === 'qr-handoff');
+                    if (guide && setSelectedResource) setSelectedResource(guide);
+                    setRoute('resources');
                   }}
                   className="hover:text-idle-gold transition-colors text-left block cursor-pointer"
                 >
                   Condition Photo Stamping
-                </a>
+                </button>
               </li>
               <li>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    addToast('0% Commission Policy details will be available in Phase 2!', 'info');
+                <button
+                  type="button"
+                  onClick={() => {
+                    const guide = RESOURCE_GUIDES.find(g => g.id === 'payments') || RESOURCE_GUIDES.find(g => g.id === 'membership');
+                    if (guide && setSelectedResource) setSelectedResource(guide);
+                    setRoute('resources');
                   }}
                   className="hover:text-idle-gold transition-colors text-left block cursor-pointer"
                 >
-                  0% Commission Policy
-                </a>
+                  Pricing & Membership Tiers
+                </button>
               </li>
               <li>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    addToast('Community Trust Guidelines will be available in Phase 2!', 'info');
+                <button
+                  type="button"
+                  onClick={() => {
+                    const guide = RESOURCE_GUIDES.find(g => g.id === 'reviews');
+                    if (guide && setSelectedResource) setSelectedResource(guide);
+                    setRoute('resources');
                   }}
                   className="hover:text-idle-gold transition-colors text-left block cursor-pointer"
                 >
                   Community Trust Guidelines
-                </a>
+                </button>
               </li>
             </ul>
           </div>
@@ -211,28 +217,22 @@ export const Footer = () => {
                 </button>
               </li>
               <li>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    addToast('Enterprise Workspaces will be available in Phase 2!', 'info');
-                  }}
+                <button
+                  type="button"
+                  onClick={() => setRoute('enterprise')}
                   className="hover:text-idle-gold transition-colors text-left block cursor-pointer"
                 >
                   Enterprise Workspaces
-                </a>
+                </button>
               </li>
               <li>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    addToast('Interactive Customer Journey will be available in Phase 2!', 'info');
-                  }}
+                <button
+                  type="button"
+                  onClick={() => setRoute('journey')}
                   className="hover:text-idle-gold transition-colors text-left block cursor-pointer"
                 >
                   Interactive Customer Journey
-                </a>
+                </button>
               </li>
             </ul>
           </div>
@@ -245,73 +245,78 @@ export const Footer = () => {
             <ul className="space-y-2 text-xs text-emerald-100/80">
               <li className="flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-idle-gold flex-shrink-0" />
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (setUserLocation) setUserLocation('Frisco, TX');
+                    if (setSearch) setSearch('Frisco');
                     setCategory('All');
                     setRoute('explore');
                   }}
-                  className="hover:text-idle-gold transition-colors cursor-pointer"
+                  className="hover:text-idle-gold transition-colors cursor-pointer text-left"
                 >
                   Frisco & Plano, TX
-                </a>
+                </button>
               </li>
               <li className="flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-idle-gold flex-shrink-0" />
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (setUserLocation) setUserLocation('Dallas Metro & Uptown, TX');
+                    if (setSearch) setSearch('Dallas');
                     setCategory('All');
                     setRoute('explore');
                   }}
-                  className="hover:text-idle-gold transition-colors cursor-pointer"
+                  className="hover:text-idle-gold transition-colors cursor-pointer text-left"
                 >
                   Dallas Metro & Uptown
-                </a>
+                </button>
               </li>
               <li className="flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-idle-gold flex-shrink-0" />
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (setUserLocation) setUserLocation('Fort Worth & Arlington, TX');
+                    if (setSearch) setSearch('Fort Worth');
                     setCategory('All');
                     setRoute('explore');
                   }}
-                  className="hover:text-idle-gold transition-colors cursor-pointer"
+                  className="hover:text-idle-gold transition-colors cursor-pointer text-left"
                 >
                   Fort Worth & Arlington
-                </a>
+                </button>
               </li>
               <li className="flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-idle-gold flex-shrink-0" />
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (setUserLocation) setUserLocation('McKinney & Allen, TX');
+                    if (setSearch) setSearch('McKinney');
                     setCategory('All');
                     setRoute('explore');
                   }}
-                  className="hover:text-idle-gold transition-colors cursor-pointer"
+                  className="hover:text-idle-gold transition-colors cursor-pointer text-left"
                 >
                   McKinney & Allen
-                </a>
+                </button>
               </li>
               <li className="flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-idle-gold flex-shrink-0" />
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (setUserLocation) setUserLocation('Denton & Grapevine, TX');
+                    if (setSearch) setSearch('Denton');
                     setCategory('All');
                     setRoute('explore');
                   }}
-                  className="hover:text-idle-gold transition-colors cursor-pointer"
+                  className="hover:text-idle-gold transition-colors cursor-pointer text-left"
                 >
                   Denton & Grapevine
-                </a>
+                </button>
               </li>
             </ul>
           </div>
@@ -322,7 +327,7 @@ export const Footer = () => {
           <div className="flex flex-wrap items-center gap-4">
             <span>&copy; {new Date().getFullYear()} IDLE Marketplace Inc.</span>
             <span>·</span>
-            <span>Zero Transaction Commissions</span>
+            <span>Verified Local Network</span>
             <span>·</span>
             <span>DFW Prototype Pilot</span>
           </div>

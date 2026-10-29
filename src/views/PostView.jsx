@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { CATEGORIES } from '../data/mockData';
 import { 
@@ -9,7 +9,10 @@ import {
   Sparkles,
   CheckCircle2,
   Calendar,
-  DollarSign
+  DollarSign,
+  Upload,
+  Check,
+  Image as ImageIcon
 } from 'lucide-react';
 
 import { AuthGate } from '../components/common/AuthGate';
@@ -45,6 +48,7 @@ export const PostView = () => {
   const [description, setDescription] = useState('');
   const [selectedImage, setSelectedImage] = useState(PRESET_IMAGES[0]);
   const [permission, setPermission] = useState(false);
+  const fileInputRef = useRef(null);
 
   // Auth gate check: must be logged in to create listings
   if (!isAuthenticated) {
@@ -52,7 +56,7 @@ export const PostView = () => {
       <AuthGate
         badge="Post an Opportunity"
         title="Sign in to create a listing on IDLE"
-        subtitle="You must be signed in to list unused tools, equipment, and professional trade skills with zero transaction commission."
+        subtitle="You must be signed in to list unused tools, equipment, and professional trade skills."
         actionText="Sign In to Post"
       />
     );
@@ -60,6 +64,32 @@ export const PostView = () => {
 
   // Filter listings created by the current user
   const userListings = listings.filter(l => l.owner === user.name);
+
+  // Handle uploading image from device
+  const handleImageFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      addToast('Please select a valid image file (PNG, JPG, WEBP)', 'error');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      addToast('Image size should be less than 10MB', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setSelectedImage(event.target.result);
+      addToast('Photo uploaded from your device!', 'success');
+    };
+    reader.onerror = () => {
+      addToast('Failed to load image file', 'error');
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -84,6 +114,8 @@ export const PostView = () => {
       date
     });
 
+    addToast('Your listing has been published!', 'success');
+
     // Reset form
     setTitle('');
     setDescription('');
@@ -101,7 +133,7 @@ export const PostView = () => {
           What would you like to post?
         </h1>
         <p className="text-xs sm:text-sm text-idle-muted mt-1 max-w-xl">
-          Free accounts can publish community requests. Paid Trade, Business, and Enterprise accounts can offer rentals, tools, and services with zero commission.
+          Free accounts can publish community requests. Paid Trade, Business, and Enterprise accounts can offer rentals, tools, and professional services.
         </p>
       </div>
 
@@ -236,24 +268,102 @@ export const PostView = () => {
             />
           </div>
 
-          {/* Preset Image Chooser */}
-          <div>
-            <label className="block text-xs font-bold text-[#172d28] uppercase tracking-wider mb-1">
-              Select Demonstration Photo
-            </label>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-              {PRESET_IMAGES.map((imgUrl, i) => (
-                <button
-                  type="button"
-                  key={i}
-                  onClick={() => setSelectedImage(imgUrl)}
-                  className={`h-16 rounded-xl overflow-hidden border-2 transition-all ${
-                    selectedImage === imgUrl ? 'border-idle-gold shadow-md scale-102' : 'border-transparent opacity-60 hover:opacity-100'
-                  }`}
+          {/* Photo Upload & Presets */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold text-[#172d28] uppercase tracking-wider">
+                Listing Photo
+              </label>
+              <span className="text-[11px] text-idle-muted">Upload your own photo or pick a sample</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-start">
+              {/* Upload Zone / Active Preview */}
+              <div className="md:col-span-5 relative">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageFileChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="group relative h-36 rounded-2xl overflow-hidden border-2 border-dashed border-[#c1d5cb] hover:border-idle-emerald bg-[#f6faf8] flex flex-col items-center justify-center p-2.5 cursor-pointer transition-all shadow-xs"
                 >
-                  <img src={imgUrl} alt={`Preset ${i}`} className="w-full h-full object-cover" />
-                </button>
-              ))}
+                  {selectedImage ? (
+                    <>
+                      <img 
+                        src={selectedImage} 
+                        alt="Selected listing preview" 
+                        className="w-full h-full object-cover rounded-xl"
+                      />
+                      <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-2">
+                        <Upload className="w-5 h-5 mb-1 text-idle-gold" />
+                        <span className="text-xs font-bold">Click to replace photo</span>
+                        <span className="text-[10px] text-emerald-200">PNG, JPG, WEBP up to 10MB</span>
+                      </div>
+                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-bold border border-white/20 flex items-center gap-1">
+                        <Check className="w-3 h-3 text-emerald-400 stroke-[3]" />
+                        <span>Active Photo</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center space-y-1">
+                      <div className="w-9 h-9 rounded-xl bg-idle-mint text-idle-emerald flex items-center justify-center mx-auto">
+                        <Upload className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-bold text-[#172d28] block">Upload photo from device</span>
+                      <span className="text-[10px] text-idle-muted block">Click to browse or drop file here</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between mt-1 px-0.5">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-[11px] font-bold text-idle-emerald hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Upload className="w-3 h-3" />
+                    <span>Upload from device</span>
+                  </button>
+                  {selectedImage && (
+                    <span className="text-[10px] text-idle-muted">Photo ready</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Sample Presets Strip */}
+              <div className="md:col-span-7 space-y-1.5">
+                <span className="text-[11px] font-semibold text-idle-muted block">
+                  Or pick a sample marketplace photo:
+                </span>
+                <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                  {PRESET_IMAGES.map((imgUrl, i) => {
+                    const isSelected = selectedImage === imgUrl;
+                    return (
+                      <button
+                        type="button"
+                        key={i}
+                        onClick={() => setSelectedImage(imgUrl)}
+                        className={`h-16 rounded-xl overflow-hidden border-2 transition-all cursor-pointer relative ${
+                          isSelected ? 'border-idle-gold shadow-md scale-102 ring-1 ring-idle-gold' : 'border-transparent opacity-60 hover:opacity-100 hover:scale-102'
+                        }`}
+                        title="Use sample photo"
+                      >
+                        <img src={imgUrl} alt={`Preset ${i}`} className="w-full h-full object-cover" />
+                        {isSelected && (
+                          <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-idle-emerald text-white flex items-center justify-center shadow-xs">
+                            <Check className="w-2 h-2 stroke-[3]" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -276,24 +386,21 @@ export const PostView = () => {
             <button
               type="submit"
               disabled={!permission}
-              className="gold-gradient-btn w-full sm:w-auto px-8 py-3 rounded-xl text-sm font-bold shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="gold-gradient-btn w-full sm:w-auto px-8 py-3 rounded-xl text-sm font-bold shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
             >
               <PlusCircle className="w-4 h-4 stroke-[2.5]" />
-              <span>Publish Demo Post</span>
+              <span>Publish Listing</span>
             </button>
-            <span className="text-[11px] text-idle-muted text-center sm:text-right">
-              Demonstration listing stored in browser local state.
-            </span>
           </div>
         </form>
       </div>
 
-      {/* Your Demo Posts Table */}
+      {/* Your Active Listings Table */}
       {userListings.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-center justify-between border-b border-idle-line pb-2">
             <h2 className="font-serif text-xl font-bold text-[#082f2c]">
-              Your Active Posts ({userListings.length})
+              Your Active Listings ({userListings.length})
             </h2>
             <span className="text-xs text-idle-muted">Manage or remove created listings</span>
           </div>
@@ -326,7 +433,7 @@ export const PostView = () => {
                       <td className="p-3.5 text-right">
                         <button
                           onClick={() => removeListing(p.id)}
-                          className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                          className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
                           title="Remove listing"
                         >
                           <Trash2 className="w-4 h-4" />
