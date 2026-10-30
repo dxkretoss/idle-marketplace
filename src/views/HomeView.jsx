@@ -5,12 +5,12 @@ import { ListingCard } from '../components/listings/ListingCard';
 import { StoriesStrip } from '../components/reels/StoriesStrip';
 import { ReelUploadModal } from '../components/modals/ReelUploadModal';
 import { Footer } from '../components/layout/Footer';
-import { 
-  ShieldCheck, 
-  Users, 
-  Building2, 
-  Play, 
-  ArrowRight, 
+import {
+  ShieldCheck,
+  Users,
+  Building2,
+  Play,
+  ArrowRight,
   Sparkles,
   Crown,
   ChevronRight,
@@ -156,6 +156,8 @@ export const HomeView = () => {
 
   return (
     <div className="space-y-10">
+
+
       {/* Hero Section */}
       <section className="relative rounded-3xl overflow-hidden bg-[#073d36] min-h-[460px] lg:min-h-[500px] flex items-center shadow-glass border border-emerald-950/20 isolate">
         {/* Background Photography with Emerald Gradient Overlay */}
@@ -174,7 +176,7 @@ export const HomeView = () => {
               The Opportunity Around You
             </span>
             <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.05]">
-              Get more <br/>from what <br/>
+              Get more <br />from what <br />
               <span className="text-idle-goldLight italic font-normal">you own.</span>
             </h1>
             <p className="text-xs sm:text-sm md:text-base text-emerald-100/90 leading-relaxed max-w-md">
@@ -242,11 +244,10 @@ export const HomeView = () => {
                     <button
                       key={item.id}
                       onClick={() => setActiveShowcaseId(item.id)}
-                      className={`py-1.5 px-2 rounded-xl text-[11px] font-bold transition-all text-center truncate cursor-pointer ${
-                        activeShowcaseId === item.id
-                          ? 'bg-gradient-to-r from-idle-gold to-[#c99739] text-[#002822] shadow-sm font-extrabold'
-                          : 'text-emerald-100/70 hover:text-white hover:bg-white/5'
-                      }`}
+                      className={`py-1.5 px-2 rounded-xl text-[11px] font-bold transition-all text-center truncate cursor-pointer ${activeShowcaseId === item.id
+                        ? 'bg-gradient-to-r from-idle-gold to-[#c99739] text-[#002822] shadow-sm font-extrabold'
+                        : 'text-emerald-100/70 hover:text-white hover:bg-white/5'
+                        }`}
                     >
                       {item.tabLabel}
                     </button>
@@ -364,6 +365,9 @@ export const HomeView = () => {
         </div>
       </section>
 
+
+
+
       {/* Trust & Metric Ribbon - Distinct from original flat design */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 -mt-3">
         <div className="p-4 rounded-2xl bg-white border border-[#dce6e0] shadow-sm flex items-center gap-3.5 group hover:border-idle-emerald/40 hover:shadow-md transition-all">
@@ -407,6 +411,7 @@ export const HomeView = () => {
         </div>
       </section>
 
+
       {/* 24-Hour Reels Stories Strip */}
       <section>
         <StoriesStrip
@@ -416,6 +421,44 @@ export const HomeView = () => {
             setRoute('reels');
           }}
         />
+      </section>
+
+      {/* Elite PM Exclusive Preview Banner */}
+      <section className="elite-home-banner border border-[#a9874a] relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 -my-4 rounded-2xl min-h-[130px] overflow-hidden bg-[#071b18] p-5 sm:p-6 text-white shadow-xl isolate">
+        <img
+          src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1400&q=80"
+          alt="Black executive SUV outside a luxury property"
+          className="absolute inset-0 w-full h-full object-cover object-[center_54%] filter brightness-90 -z-20"
+          loading="lazy"
+        />
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-[#041412] via-[#09251e]/85 to-[#05140e]/30 pointer-events-none -z-10"
+        />
+
+        <div className="relative z-10 flex-1 max-w-xl space-y-1">
+          <span className="text-[#d2b372] tracking-[0.16em] text-[10px] sm:text-[11px] font-extrabold uppercase block">
+            EXCLUSIVE PREVIEW · NORTH TEXAS
+          </span>
+          <div className="flex items-baseline gap-2.5 flex-wrap">
+            <strong className="font-serif text-2xl sm:text-3xl text-[#f8e1b1] font-normal leading-tight">
+              Elite PM
+            </strong>
+            <small className="text-[10px] font-bold tracking-[0.15em] text-[#efdab5] uppercase">
+              PRIVATE MEMBERS
+            </small>
+          </div>
+          <p className="text-[#ecf1e9] text-xs sm:text-sm mt-0.5 leading-relaxed">
+            Arrive privately. Travel beautifully. Make room for what matters.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setRoute('elite-pm')}
+          className="relative z-10 px-5 py-2.5 rounded-full border border-[#e0c187] bg-[#e1c180] hover:bg-[#d6b46e] text-[#182720] text-xs font-extrabold whitespace-nowrap shadow-md cursor-pointer transition-all hover:scale-102 shrink-0"
+        >
+          Discover Elite PM ↗
+        </button>
       </section>
 
       {/* How IDLE Works: The Single-Use QR Protocol */}
@@ -510,9 +553,8 @@ export const HomeView = () => {
               <button
                 key={cat.id}
                 onClick={() => handleCategoryClick(cat.id)}
-                className={`glass-card glass-card-hover p-2.5 rounded-2xl flex flex-col text-left group overflow-hidden relative cursor-pointer ${
-                  isPreferred ? 'border-idle-emerald/40 bg-idle-mint/20' : ''
-                }`}
+                className={`glass-card glass-card-hover p-2.5 rounded-2xl flex flex-col text-left group overflow-hidden relative cursor-pointer ${isPreferred ? 'border-idle-emerald/40 bg-idle-mint/20' : ''
+                  }`}
               >
                 <div className="h-28 rounded-xl overflow-hidden bg-emerald-950/10 mb-2 relative">
                   <img
@@ -566,22 +608,20 @@ export const HomeView = () => {
                 <button
                   type="button"
                   onClick={() => setFeedFilter('personalized')}
-                  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                    isPersonalized
-                      ? 'bg-idle-emerald text-white shadow-xs'
-                      : 'text-idle-muted hover:text-[#172d28]'
-                  }`}
+                  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${isPersonalized
+                    ? 'bg-idle-emerald text-white shadow-xs'
+                    : 'text-idle-muted hover:text-[#172d28]'
+                    }`}
                 >
                   My Interests ({userInterests.length})
                 </button>
                 <button
                   type="button"
                   onClick={() => setFeedFilter('all')}
-                  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                    !isPersonalized
-                      ? 'bg-idle-emerald text-white shadow-xs'
-                      : 'text-idle-muted hover:text-[#172d28]'
-                  }`}
+                  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${!isPersonalized
+                    ? 'bg-idle-emerald text-white shadow-xs'
+                    : 'text-idle-muted hover:text-[#172d28]'
+                    }`}
                 >
                   All Items
                 </button>
@@ -607,7 +647,7 @@ export const HomeView = () => {
 
       {/* Promotional Triple Panels */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div 
+        <div
           onClick={() => {
             setCategory('Tools');
             setRoute('explore');
@@ -625,7 +665,7 @@ export const HomeView = () => {
           </div>
         </div>
 
-        <div 
+        <div
           onClick={() => {
             setCategory('Services');
             setRoute('explore');
@@ -643,7 +683,7 @@ export const HomeView = () => {
           </div>
         </div>
 
-        <div 
+        <div
           onClick={() => {
             setCategory('Events');
             setRoute('explore');
@@ -703,11 +743,10 @@ export const HomeView = () => {
               <button
                 key={cat}
                 onClick={() => setFaqCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                  faqCategory === cat
-                    ? 'bg-idle-emerald text-white shadow-sm'
-                    : 'bg-white border border-[#dce6e0] text-[#172d28] hover:bg-idle-mint'
-                }`}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${faqCategory === cat
+                  ? 'bg-idle-emerald text-white shadow-sm'
+                  : 'bg-white border border-[#dce6e0] text-[#172d28] hover:bg-idle-mint'
+                  }`}
               >
                 {cat}
               </button>
@@ -724,11 +763,10 @@ export const HomeView = () => {
               return (
                 <div
                   key={index}
-                  className={`rounded-2xl transition-all border ${
-                    isOpen 
-                      ? 'bg-white border-idle-emerald/40 shadow-md ring-1 ring-idle-emerald/10' 
-                      : 'bg-white/80 hover:bg-white border-[#dce6e0] shadow-sm'
-                  }`}
+                  className={`rounded-2xl transition-all border ${isOpen
+                    ? 'bg-white border-idle-emerald/40 shadow-md ring-1 ring-idle-emerald/10'
+                    : 'bg-white/80 hover:bg-white border-[#dce6e0] shadow-sm'
+                    }`}
                 >
                   <button
                     onClick={() => setOpenFaqIndex(isOpen ? -1 : index)}
@@ -736,18 +774,16 @@ export const HomeView = () => {
                     aria-expanded={isOpen}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
-                        isOpen ? 'bg-idle-mint text-idle-emerald' : 'bg-[#f0f4f1] text-idle-muted'
-                      }`}>
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${isOpen ? 'bg-idle-mint text-idle-emerald' : 'bg-[#f0f4f1] text-idle-muted'
+                        }`}>
                         <HelpCircle className="w-4 h-4" />
                       </div>
                       <span className="font-bold text-xs sm:text-sm text-[#003d36] leading-snug">
                         {faq.question}
                       </span>
                     </div>
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-transform duration-200 flex-shrink-0 ${
-                      isOpen ? 'rotate-180 bg-idle-mint text-idle-emerald' : 'bg-gray-100 text-gray-500'
-                    }`}>
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180 bg-idle-mint text-idle-emerald' : 'bg-gray-100 text-gray-500'
+                      }`}>
                       <ChevronDown className="w-4 h-4" />
                     </div>
                   </button>

@@ -1,28 +1,29 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { 
-  X, 
-  MapPin, 
-  Star, 
-  ShieldCheck, 
-  Calendar, 
-  Heart, 
-  MessageSquare, 
-  QrCode, 
-  Check, 
+import {
+  X,
+  MapPin,
+  Star,
+  ShieldCheck,
+  Calendar,
+  Heart,
+  MessageSquare,
+  QrCode,
+  Check,
   Share2,
   Clock,
   Sparkles
 } from 'lucide-react';
 
 export const ListingDetailModal = () => {
-  const { 
-    activeListing, 
-    setActiveListing, 
-    likes, 
-    toggleLike, 
-    createBooking, 
-    setRoute, 
+  const {
+    activeListing,
+    setActiveListing,
+    likes,
+    toggleLike,
+    createBooking,
+    startMessageThread,
+    setRoute,
     addToast,
     isAuthenticated
   } = useApp();
@@ -32,26 +33,19 @@ export const ListingDetailModal = () => {
   const isLiked = likes.includes(activeListing.id);
 
   const handleStartBooking = () => {
-    if (!isAuthenticated) {
-      setActiveListing(null);
-      addToast('Please sign in or create an account to book equipment or services', 'info');
-      setRoute('auth');
-      return;
-    }
     const listingToBook = activeListing;
     setActiveListing(null);
     createBooking(listingToBook);
   };
 
   const handleOpenMessages = () => {
-    if (!isAuthenticated) {
-      setActiveListing(null);
-      addToast('Please sign in to message providers and negotiate', 'info');
-      setRoute('auth');
-      return;
-    }
+    const listingToMessage = activeListing;
     setActiveListing(null);
-    setRoute('messages');
+    if (startMessageThread) {
+      startMessageThread(listingToMessage);
+    } else {
+      setRoute('messages');
+    }
   };
 
   const handleShare = () => {
@@ -61,7 +55,7 @@ export const ListingDetailModal = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div 
+      <div
         className="glass-card bg-white max-w-3xl w-full max-h-[92vh] overflow-y-auto rounded-3xl shadow-2xl border border-idle-emerald/20 flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
@@ -78,9 +72,8 @@ export const ListingDetailModal = () => {
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => toggleLike(activeListing.id)}
-              className={`p-2 rounded-full transition-all ${
-                isLiked ? 'text-red-500 bg-red-50' : 'text-idle-muted hover:bg-black/5'
-              }`}
+              className={`p-2 rounded-full transition-all ${isLiked ? 'text-red-500 bg-red-50' : 'text-idle-muted hover:bg-black/5'
+                }`}
               title={isLiked ? 'Remove favorite' : 'Save favorite'}
             >
               <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
@@ -106,8 +99,8 @@ export const ListingDetailModal = () => {
         <div className="p-5 md:p-7 space-y-6">
           {/* Main Visual */}
           <div className="relative h-64 md:h-84 rounded-2xl overflow-hidden bg-emerald-950/5">
-            <img 
-              src={activeListing.image} 
+            <img
+              src={activeListing.image}
               alt={activeListing.title}
               className="w-full h-full object-cover"
             />

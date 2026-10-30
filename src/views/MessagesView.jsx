@@ -94,10 +94,14 @@ export const MessagesView = () => {
     addToast, 
     bookings, 
     setActiveBooking,
-    setActiveListing
+    setActiveListing,
+    activeThreadId: globalActiveThreadId,
+    setActiveThreadId: globalSetActiveThreadId
   } = useApp();
 
-  const [activeThreadId, setActiveThreadId] = useState(inbox[0]?.id || 'th-1');
+  const [localActiveThreadId, setLocalActiveThreadId] = useState(inbox[0]?.id || 'th-1');
+  const activeThreadId = globalActiveThreadId || localActiveThreadId;
+  const setActiveThreadId = globalSetActiveThreadId || setLocalActiveThreadId;
   const [inputText, setInputText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [profileModalOpen, setProfileModalOpen] = useState(false);

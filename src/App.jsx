@@ -24,6 +24,11 @@ import { AuthView } from './views/AuthView';
 import { ContactView } from './views/ContactView';
 import { PrivacyView } from './views/PrivacyView';
 import { TermsView } from './views/TermsView';
+import { ElitePmView } from './views/ElitePmView';
+import { OwnerSandboxView } from './views/OwnerSandboxView';
+import { TasksView } from './views/TasksView';
+import { AdminProvider } from './context/AdminContext';
+import { AdminLayout } from './views/admin/AdminLayout';
 
 const MainContent = () => {
   const { route } = useApp();
@@ -36,6 +41,8 @@ const MainContent = () => {
         return <ExploreView />;
       case 'reels':
         return <ReelsView />;
+      case 'tasks':
+        return <TasksView />;
       case 'post':
         return <PostView />;
       case 'messages':
@@ -61,10 +68,24 @@ const MainContent = () => {
         return <PrivacyView />;
       case 'terms':
         return <TermsView />;
+      case 'elite-pm':
+        return <ElitePmView />;
+      case 'owner':
+        return <OwnerSandboxView />;
       default:
         return <HomeView />;
     }
   };
+
+  // Standalone full-screen layout for Admin Console (/admin)
+  if (route === 'admin') {
+    return (
+      <div className="min-h-screen w-full bg-[#f4f7f5] text-[#172d28]">
+        <AdminLayout />
+        <ToastContainer />
+      </div>
+    );
+  }
 
   // Standalone full-screen layout for Authentication page
   if (route === 'auth') {
@@ -109,7 +130,9 @@ const MainContent = () => {
 export default function App() {
   return (
     <AppProvider>
-      <MainContent />
+      <AdminProvider>
+        <MainContent />
+      </AdminProvider>
     </AppProvider>
   );
 }
