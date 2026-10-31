@@ -95,7 +95,7 @@ const FAQS = [
   {
     category: 'Pricing',
     question: "How do IDLE membership plans work?",
-    answer: "IDLE offers transparent, predictable membership tiers (Free for casual search and community requests, Trade at $15/mo, and Business at $29/mo). Paid tiers unlock unlimited listings, 24-hour promotional Reels, and direct messaging."
+    answer: "IDLE offers transparent, predictable membership tiers (Free for casual search and community requests, Studio at $29/mo, Studio Pro at $59/mo, Business at $149/mo, and Enterprise at $399/mo). Paid tiers unlock listings, 24-hour promotional Reels, and direct messaging."
   },
   {
     category: 'Protection',
@@ -423,46 +423,70 @@ export const HomeView = () => {
         />
       </section>
 
-      {/* Elite PM Exclusive Preview Banner */}
-      <section className="elite-home-banner border border-[#a9874a] relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 -my-4 rounded-2xl min-h-[130px] overflow-hidden bg-[#071b18] p-5 sm:p-6 text-white shadow-xl isolate">
+      {/* Elite PM Exclusive Preview Banner - Enhanced Height & Luxury Presence */}
+      {/* <section className="elite-home-banner border border-[#cda348]/60 relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6 my-2 sm:my-3 rounded-3xl min-h-[250px] sm:min-h-[280px] overflow-hidden bg-[#051815] p-6 sm:p-8 md:p-10 text-white shadow-2xl isolate">
         <img
-          src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1400&q=80"
-          alt="Black executive SUV outside a luxury property"
-          className="absolute inset-0 w-full h-full object-cover object-[center_54%] filter brightness-90 -z-20"
+          src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1600&q=85"
+          alt="Black executive luxury SUV in North Texas"
+          className="absolute inset-0 w-full h-full object-cover object-[right_center] sm:object-[center_55%] filter brightness-95 contrast-[1.05] -z-20 transition-transform duration-700 hover:scale-[1.02]"
           loading="lazy"
         />
         <div
-          className="absolute inset-0 bg-gradient-to-r from-[#041412] via-[#09251e]/85 to-[#05140e]/30 pointer-events-none -z-10"
+          className="absolute inset-0 bg-gradient-to-r from-[#031411]/95 via-[#06221c]/85 md:via-[#06221c]/70 to-black/20 pointer-events-none -z-10"
+        />
+        <div
+          className="absolute -top-24 -left-24 w-80 h-80 bg-idle-gold/15 rounded-full blur-3xl pointer-events-none -z-10"
         />
 
-        <div className="relative z-10 flex-1 max-w-xl space-y-1">
-          <span className="text-[#d2b372] tracking-[0.16em] text-[10px] sm:text-[11px] font-extrabold uppercase block">
-            EXCLUSIVE PREVIEW · NORTH TEXAS
-          </span>
-          <div className="flex items-baseline gap-2.5 flex-wrap">
-            <strong className="font-serif text-2xl sm:text-3xl text-[#f8e1b1] font-normal leading-tight">
-              Elite PM
-            </strong>
-            <small className="text-[10px] font-bold tracking-[0.15em] text-[#efdab5] uppercase">
-              PRIVATE MEMBERS
-            </small>
+        <div className="relative z-10 flex-1 max-w-2xl space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#102d24]/80 border border-idle-gold/40 text-[#f1d18e] text-[10px] sm:text-[11px] font-extrabold uppercase tracking-[0.18em] shadow-xs">
+            <span>✦ EXCLUSIVE PREVIEW · NORTH TEXAS DFW CORRIDOR</span>
           </div>
-          <p className="text-[#ecf1e9] text-xs sm:text-sm mt-0.5 leading-relaxed">
-            Arrive privately. Travel beautifully. Make room for what matters.
-          </p>
+
+          <div>
+            <div className="flex items-baseline gap-3 flex-wrap">
+              <strong className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#fbf1db] font-normal tracking-tight leading-tight drop-shadow-md">
+                Elite PM
+              </strong>
+              <small className="text-xs font-black tracking-[0.2em] text-[#d6a746] uppercase">
+                PRIVATE MEMBERS
+              </small>
+            </div>
+            <p className="text-[#e2ece6] text-xs sm:text-sm md:text-base mt-1.5 leading-relaxed font-medium max-w-xl drop-shadow-xs">
+              Arrive privately. Travel beautifully. Make room for what matters with private black-car, exotic drives, luxury estates, and discreet concierge coordination.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] font-semibold text-[#f4e6c3]">
+            <span className="px-2.5 py-1 rounded-lg bg-black/40 backdrop-blur-xs border border-white/10">
+              ✦ Black-Car & Chauffeurs
+            </span>
+            <span className="px-2.5 py-1 rounded-lg bg-black/40 backdrop-blur-xs border border-white/10">
+              ◇ Exotic Collectible Drives
+            </span>
+            <span className="px-2.5 py-1 rounded-lg bg-black/40 backdrop-blur-xs border border-white/10">
+              ⌂ Luxury Estates & Retreats
+            </span>
+            <span className="px-2.5 py-1 rounded-lg bg-black/40 backdrop-blur-xs border border-white/10">
+              ✈ Operator Inquiries Only
+            </span>
+          </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setRoute('elite-pm')}
-          className="relative z-10 px-5 py-2.5 rounded-full border border-[#e0c187] bg-[#e1c180] hover:bg-[#d6b46e] text-[#182720] text-xs font-extrabold whitespace-nowrap shadow-md cursor-pointer transition-all hover:scale-102 shrink-0"
-        >
-          Discover Elite PM ↗
-        </button>
-      </section>
+        <div className="relative z-10 shrink-0 pt-2 md:pt-0">
+          <button
+            type="button"
+            onClick={() => setRoute('elite-pm')}
+            className="gold-gradient-btn px-6 sm:px-8 py-3.5 rounded-2xl text-xs sm:text-sm font-black text-[#0f241d] whitespace-nowrap shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer border border-[#f5dfaa] flex items-center gap-2"
+          >
+            <span>Discover Elite PM</span>
+            <span className="text-sm">↗</span>
+          </button>
+        </div>
+      </section> */}
 
       {/* How IDLE Works: The Single-Use QR Protocol */}
-      <section className="p-6 sm:p-10 rounded-3xl bg-gradient-to-br from-[#00332c] via-[#002722] to-[#001d19] text-white shadow-xl border border-white/10 relative overflow-hidden isolate">
+      {/* <section className="p-6 sm:p-10 rounded-3xl bg-gradient-to-br from-[#00332c] via-[#002722] to-[#001d19] text-white shadow-xl border border-white/10 relative overflow-hidden isolate">
         <div className="absolute top-0 right-0 w-80 h-80 bg-idle-gold/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
         <div className="max-w-xl space-y-2 mb-8">
@@ -477,9 +501,9 @@ export const HomeView = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* Step 1 */}
-          <div className="p-5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md space-y-3 group hover:border-idle-gold/50 transition-all">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5"> */}
+      {/* Step 1 */}
+      {/* <div className="p-5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md space-y-3 group hover:border-idle-gold/50 transition-all">
             <div className="flex items-center justify-between">
               <span className="font-serif text-2xl font-bold text-idle-gold/90">01</span>
               <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-idle-gold/20 text-idle-gold border border-idle-gold/30">
@@ -490,10 +514,10 @@ export const HomeView = () => {
             <p className="text-xs text-emerald-200/75 leading-relaxed">
               Browse tools, camera kits, and machinery in your radius. Watch 24h video proofs and chat directly with verified neighbors.
             </p>
-          </div>
+          </div> */}
 
-          {/* Step 2 */}
-          <div className="p-5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md space-y-3 group hover:border-emerald-400/50 transition-all">
+      {/* Step 2 */}
+      {/* <div className="p-5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md space-y-3 group hover:border-emerald-400/50 transition-all">
             <div className="flex items-center justify-between">
               <span className="font-serif text-2xl font-bold text-idle-gold/90">02</span>
               <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
@@ -504,10 +528,10 @@ export const HomeView = () => {
             <p className="text-xs text-emerald-200/75 leading-relaxed">
               Meet in person and scan the encrypted QR pass. Both parties capture 4 condition photos to verify physical item condition and record custody handoff.
             </p>
-          </div>
+          </div> */}
 
-          {/* Step 3 */}
-          <div className="p-5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md space-y-3 group hover:border-idle-gold/50 transition-all">
+      {/* Step 3 */}
+      {/* <div className="p-5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md space-y-3 group hover:border-idle-gold/50 transition-all">
             <div className="flex items-center justify-between">
               <span className="font-serif text-2xl font-bold text-idle-gold/90">03</span>
               <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-idle-gold/20 text-idle-gold border border-idle-gold/30">
@@ -520,7 +544,7 @@ export const HomeView = () => {
             </p>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Shop by Category Tiles */}
       <section className="space-y-4">
@@ -646,82 +670,89 @@ export const HomeView = () => {
       </section>
 
       {/* Promotional Triple Panels */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div
-          onClick={() => {
-            setCategory('Tools');
-            setRoute('explore');
-          }}
-          className="glass-card glass-card-hover p-5 rounded-2xl cursor-pointer relative overflow-hidden group flex flex-col justify-between min-h-[160px]"
-        >
-          <div className="space-y-1">
-            <span className="text-[10px] uppercase font-bold text-idle-gold tracking-wider">Heavy Equipment</span>
-            <h3 className="font-serif text-lg font-bold text-[#0d2e29]">Fleet, Tools & Machinery</h3>
-            <p className="text-xs text-idle-muted">High-grade rentals, skid steers, trailers, and site tools.</p>
-          </div>
-          <div className="flex items-center gap-1 text-xs font-bold text-idle-emerald pt-3">
-            <span>Browse equipment</span>
-            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-          </div>
-        </div>
+      {/* Prototype 3 Feature Panels (promotions) */}
+      <section className="section">
+        <div className="feature-panels">
+          <button
+            type="button"
+            onClick={() => setRoute('enterprise')}
+            className="feature-panel group"
+            title="Enterprise teams"
+          >
+            <img
+              src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=800&q=80"
+              alt="Enterprise teams"
+              loading="lazy"
+            />
+            <span className="feature-panel-content">
+              <strong>Enterprise teams</strong>
+              <small>Equipment, people and operations in one place</small>
+              <span>Discover more ↗</span>
+            </span>
+          </button>
 
-        <div
-          onClick={() => {
-            setCategory('Services');
-            setRoute('explore');
-          }}
-          className="glass-card glass-card-hover p-5 rounded-2xl cursor-pointer relative overflow-hidden group flex flex-col justify-between min-h-[160px]"
-        >
-          <div className="space-y-1">
-            <span className="text-[10px] uppercase font-bold text-idle-gold tracking-wider">Trusted Skills</span>
-            <h3 className="font-serif text-lg font-bold text-[#0d2e29]">Meet Local Pros & Crews</h3>
-            <p className="text-xs text-idle-muted">Handymen, personal trainers, moving crews & stylists near you.</p>
-          </div>
-          <div className="flex items-center gap-1 text-xs font-bold text-idle-emerald pt-3">
-            <span>Find local experts</span>
-            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-          </div>
-        </div>
+          <button
+            type="button"
+            onClick={() => {
+              setCategory('Services');
+              setRoute('explore');
+            }}
+            className="feature-panel group"
+            title="Trusted local skills"
+          >
+            <img
+              src="https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80"
+              alt="Trusted local skills"
+              loading="lazy"
+            />
+            <span className="feature-panel-content">
+              <strong>Trusted local skills</strong>
+              <small>Meet workers and discover nearby services</small>
+              <span>Discover more ↗</span>
+            </span>
+          </button>
 
-        <div
-          onClick={() => {
-            setCategory('Events');
-            setRoute('explore');
-          }}
-          className="glass-card glass-card-hover p-5 rounded-2xl cursor-pointer relative overflow-hidden group flex flex-col justify-between min-h-[160px]"
-        >
-          <div className="space-y-1">
-            <span className="text-[10px] uppercase font-bold text-idle-gold tracking-wider">Events & Pop-ups</span>
-            <h3 className="font-serif text-lg font-bold text-[#0d2e29]">Occasions & Experiences</h3>
-            <p className="text-xs text-idle-muted">Tents, cinema gear, audio systems & catering pop-up trailers.</p>
-          </div>
-          <div className="flex items-center gap-1 text-xs font-bold text-idle-emerald pt-3">
-            <span>Browse event rentals</span>
-            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setCategory('Events');
+              setRoute('explore');
+            }}
+            className="feature-panel group"
+            title="Events & experiences"
+          >
+            <img
+              src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80"
+              alt="Events & experiences"
+              loading="lazy"
+            />
+            <span className="feature-panel-content">
+              <strong>Events & experiences</strong>
+              <small>Discover people, equipment and spaces</small>
+              <span>Discover more ↗</span>
+            </span>
+          </button>
         </div>
       </section>
 
-      {/* Membership Banner */}
-      <section className="rounded-3xl p-6 md:p-8 bg-gradient-to-r from-[#003d36] via-[#004f46] to-[#0c6559] text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl border border-white/10">
-        <div className="space-y-2 max-w-xl">
-          <span className="text-[10px] uppercase font-extrabold tracking-widest text-idle-gold block">
-            Flexible Membership Tiers
-          </span>
-          <h2 className="font-serif text-2xl md:text-3xl font-bold">
-            Browse free. Earn with Trade.
-          </h2>
-          <p className="text-xs md:text-sm text-emerald-100/90 leading-relaxed">
-            Free members can search and submit requests. Unlock unlimited listings, 24h promotional Reels, and direct paid member chat starting at $15/month with full directory and networking tools.
-          </p>
+      {/* Prototype Studio Membership Invite Banner */}
+      <section className="section">
+        <div className="membership-invite shadow-xl">
+          <div className="space-y-1.5">
+            <div className="eyebrow">START YOUR OWN OPPORTUNITY</div>
+            <h2>Browse for free. <em>Build with Studio.</em></h2>
+            <p>
+              One subscription across eligible trades, rentals, services and promotional Reels. No IDLE commission on peer transaction value.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setRoute('membership')}
+            className="gold-gradient-btn px-6 py-3.5 rounded-xl text-xs md:text-sm font-bold text-[#0f241d] shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-transform flex-shrink-0 cursor-pointer"
+          >
+            Explore memberships →
+          </button>
         </div>
-        <button
-          onClick={() => setRoute('membership')}
-          className="gold-gradient-btn px-6 py-3 rounded-xl text-xs md:text-sm font-bold shadow-lg flex-shrink-0 flex items-center gap-2 cursor-pointer"
-        >
-          <Crown className="w-4 h-4 stroke-[2.2]" />
-          <span>Compare Memberships</span>
-        </button>
       </section>
 
       {/* ================= FAQS SECTION ================= */}

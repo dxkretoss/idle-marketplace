@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { ENTERPRISE_LANES } from '../data/mockData';
-import { 
-  Building2, 
-  Users, 
-  HardHat, 
-  Truck, 
-  Tent, 
-  Wrench, 
-  Video, 
-  Plus, 
-  Trash2, 
-  Clock, 
-  MapPin, 
+import {
+  Building2,
+  Users,
+  HardHat,
+  Truck,
+  Tent,
+  Wrench,
+  Video,
+  Plus,
+  Trash2,
+  Clock,
+  MapPin,
   ShieldCheck,
   CheckCircle2,
   Crown
@@ -28,11 +28,11 @@ const ICON_MAP = {
 };
 
 export const EnterpriseView = () => {
-  const { 
-    enterpriseTeam, 
-    addEnterpriseMember, 
-    removeEnterpriseMember, 
-    enterpriseTasks, 
+  const {
+    enterpriseTeam,
+    addEnterpriseMember,
+    removeEnterpriseMember,
+    enterpriseTasks,
     addEnterpriseTask,
     plan,
     setRoute,
@@ -140,7 +140,7 @@ export const EnterpriseView = () => {
           {ENTERPRISE_LANES.map((lane, i) => {
             const Icon = ICON_MAP[lane.icon] || Building2;
             return (
-              <div 
+              <div
                 key={i}
                 className="glass-card glass-card-hover rounded-2xl overflow-hidden flex flex-col group border border-idle-line"
               >
@@ -185,15 +185,18 @@ export const EnterpriseView = () => {
             <h3 className="font-serif text-lg font-bold text-[#172d28]">
               Organizational Access Required
             </h3>
-            <p className="text-xs text-idle-muted max-w-lg">
-              Enterprise dispatch and team seat controls require a Business ($45/mo) or Enterprise ($90/mo) plan.
-            </p>
-            <button
-              onClick={() => setPlan('Enterprise')}
-              className="gold-gradient-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-md"
-            >
-              Test as Enterprise Member
-            </button>
+
+            <div className='flex flex-col md:flex-row justify-between'>
+              <p className="text-xs text-idle-muted max-w-lg">
+                Enterprise dispatch and team seat controls require a Business ($45/mo) or Enterprise ($90/mo) plan.
+              </p>
+              <button
+                onClick={() => setPlan('Enterprise')}
+                className="gold-gradient-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-md"
+              >
+                Test as Enterprise Member
+              </button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -298,7 +301,7 @@ export const EnterpriseView = () => {
               {/* Tasks List */}
               <div className="space-y-2.5 max-h-80 overflow-y-auto no-scrollbar pt-1">
                 {enterpriseTasks.map((t) => (
-                  <div 
+                  <div
                     key={t.id}
                     className="p-3 rounded-2xl bg-white border border-idle-line hover:border-idle-emerald/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs shadow-sm"
                   >
@@ -314,13 +317,12 @@ export const EnterpriseView = () => {
                     </div>
 
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        t.priority === 'Urgent'
-                          ? 'bg-red-100 text-red-700'
-                          : t.priority === 'High'
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-emerald-100 text-emerald-800'
-                      }`}>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${t.priority === 'Urgent'
+                        ? 'bg-red-100 text-red-700'
+                        : t.priority === 'High'
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-emerald-100 text-emerald-800'
+                        }`}>
                         {t.priority}
                       </span>
                       <span className="text-[11px] font-bold text-idle-muted bg-[#f4f7f5] px-2 py-0.5 rounded-lg border border-idle-line">

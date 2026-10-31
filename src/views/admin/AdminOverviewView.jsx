@@ -144,7 +144,8 @@ export const AdminOverviewView = () => {
               </div>
             ))}
 
-            {adminData.eliteApprovals.map(approval => (
+            {/* Elite PM approval navigation stopped and hidden while Elite PM is hidden */}
+            {false && adminData.eliteApprovals.map(approval => (
               <div
                 key={approval.id}
                 onClick={() => setActiveView('elite')}

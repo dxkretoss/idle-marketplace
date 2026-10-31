@@ -94,25 +94,26 @@ export const ReelUploadModal = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 !m-0">
+    <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 !m-0">
       <div 
-        className="glass-card bg-white max-w-xl w-full max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl border border-idle-emerald/20 flex flex-col"
+        className="glass-card bg-white max-w-2xl w-full max-h-[92vh] overflow-y-auto rounded-3xl shadow-2xl border border-idle-emerald/20 flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="sticky top-0 z-10 glass-header px-5 py-4 flex items-center justify-between border-b border-idle-line">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-idle-mint text-idle-emerald flex items-center justify-center">
-              <Film className="w-4 h-4" />
+        {/* Header matching prototype */}
+        <div className="sticky top-0 z-10 glass-header px-5 sm:px-6 py-4 flex items-center justify-between border-b border-[#dce6df] bg-white/95 backdrop-blur-md">
+          <div className="space-y-0.5">
+            <div className="text-[10px] font-extrabold uppercase tracking-widest text-[#9b782c]">
+              24-HOUR PROMOTION
             </div>
-            <div>
-              <h2 className="font-serif text-lg font-bold text-[#003d36]">Show what you're working on.</h2>
-              <p className="text-[11px] text-idle-muted">Share an outfit, workout, or project for 24 hours</p>
-            </div>
+            <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#004f46]">
+              Show what you're working on.
+            </h2>
           </div>
           <button 
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-full text-idle-muted hover:bg-black/5 cursor-pointer"
+            className="p-1.5 rounded-full text-[#7a8d82] hover:text-[#004f46] hover:bg-black/5 cursor-pointer transition-colors"
+            title="Close"
           >
             <X className="w-5 h-5" />
           </button>
@@ -120,159 +121,189 @@ export const ReelUploadModal = ({ isOpen, onClose }) => {
 
         {/* Form Body */}
         {!isPaid ? (
-          <div className="p-6 text-center space-y-4">
+          <div className="p-8 text-center space-y-4">
             <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 text-idle-gold flex items-center justify-center border border-idle-gold/30">
               <Sparkles className="w-7 h-7" />
             </div>
             <div>
               <h3 className="font-serif text-xl font-bold text-[#172d28]">Publishing requires a paid membership</h3>
-              <p className="text-xs text-idle-muted max-w-xs mx-auto mt-1">
+              <p className="text-xs text-idle-muted max-w-sm mx-auto mt-1">
                 Free accounts can watch. Studio, Studio Pro, Business and Enterprise can create promotional Reels.
               </p>
             </div>
             <button
+              type="button"
               onClick={() => {
                 onClose();
                 setRoute('membership');
               }}
-              className="gold-gradient-btn px-6 py-2.5 rounded-xl text-sm font-bold shadow-md cursor-pointer"
+              className="gold-gradient-btn px-6 py-2.5 rounded-xl text-xs font-bold shadow-md cursor-pointer"
             >
-              Unlock Studio →
+              Unlock posting →
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-5 md:p-6 space-y-4 text-xs md:text-sm">
-            {/* Field 1: Reel Title */}
-            <div>
-              <label className="block text-xs font-bold text-[#004f46] mb-1">
-                Reel title
-              </label>
-              <input
-                type="text"
-                required
-                maxLength={80}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="A new listing, a workout, a finished job…"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-idle-line bg-[#f8faf9] focus:bg-white focus:border-idle-emerald outline-none transition-all text-xs"
-              />
+          <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4 text-xs">
+            <p className="text-xs text-[#596e64] -mt-1">
+              Share an outfit, a workout, a before-and-after job, or enterprise project. The local demo only stores your post in this browser.
+            </p>
+
+            {/* Row 1: Reel title & Category */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-[#004f46]">
+                  Reel title
+                </label>
+                <input
+                  type="text"
+                  required
+                  maxLength={80}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="A new listing, a workout, a finished job…"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#dbe6df] bg-[#fbfcfa] focus:bg-white focus:border-[#004f46] outline-none transition-all text-xs"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-[#004f46]">
+                  Category
+                </label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#dbe6df] bg-[#fbfcfa] focus:bg-white focus:border-[#004f46] outline-none transition-all text-xs cursor-pointer"
+                >
+                  {['Fashion', 'Fitness', 'Home services', 'Equipment', 'Creators', 'Enterprise', 'Events', 'Outdoor'].map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            {/* Field 2: Category */}
-            <div>
-              <label className="block text-xs font-bold text-[#004f46] mb-1">
-                Category
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-idle-line bg-[#f8faf9] focus:bg-white focus:border-idle-emerald outline-none transition-all text-xs cursor-pointer"
-              >
-                {['Fashion', 'Fitness', 'Home services', 'Equipment', 'Creators', 'Enterprise', 'Events', 'Outdoor'].map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
+            {/* Row 2: What are you showing? & Link to listing */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-[#004f46]">
+                  What are you showing?
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  maxLength={300}
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  placeholder="Tell people what makes this moment worth checking out"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#dbe6df] bg-[#fbfcfa] focus:bg-white focus:border-[#004f46] outline-none transition-all text-xs resize-none"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-[#004f46]">
+                  Link to your marketplace listing
+                </label>
+                <select
+                  value={linkedListingId}
+                  onChange={(e) => setLinkedListingId(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#dbe6df] bg-[#fbfcfa] focus:bg-white focus:border-[#004f46] outline-none transition-all text-xs cursor-pointer"
+                >
+                  <option value="">Reel only · no listing</option>
+                  {listings.map(l => (
+                    <option key={l.id} value={l.id}>{l.title}</option>
+                  ))}
+                </select>
+                <p className="text-[11px] text-[#7a8d82]">
+                  Optional: Link a verified rental item or service offer so viewers can book directly.
+                </p>
+              </div>
             </div>
 
-            {/* Field 3: What are you showing? (Caption) */}
-            <div>
-              <label className="block text-xs font-bold text-[#004f46] mb-1">
-                What are you showing?
-              </label>
-              <textarea
-                required
-                rows={3}
-                maxLength={300}
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                placeholder="Tell people what makes this moment worth checking out"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-idle-line bg-[#f8faf9] focus:bg-white focus:border-idle-emerald outline-none transition-all text-xs resize-none"
-              />
-            </div>
-
-            {/* Field 4: Link to your marketplace listing */}
-            <div>
-              <label className="block text-xs font-bold text-[#004f46] mb-1">
-                Link to your marketplace listing
-              </label>
-              <select
-                value={linkedListingId}
-                onChange={(e) => setLinkedListingId(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-idle-line bg-[#f8faf9] focus:bg-white focus:border-idle-emerald outline-none transition-all text-xs cursor-pointer"
-              >
-                <option value="">Reel only · no listing</option>
-                {listings.map(l => (
-                  <option key={l.id} value={l.id}>{l.title}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Field 5: Photo or short video */}
+            {/* Row 3: Photo or short video */}
             <div className="space-y-2">
               <label className="block text-xs font-bold text-[#004f46]">
                 Photo or short video
               </label>
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
-                onChange={handleFileChange}
-                className="block w-full text-xs text-[#596e64] file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border file:border-idle-line file:text-xs file:font-bold file:bg-[#f1f8f2] file:text-[#004f46] hover:file:bg-[#e1f6f1] file:cursor-pointer cursor-pointer"
-              />
-              <span className="text-[11px] text-[#7a8d82] block">
-                0 / 12 new Reels in the last 24h. Browser media limit 1.5 MB.
-              </span>
+              
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
+                  onChange={handleFileChange}
+                  className="block w-full sm:w-auto text-xs text-[#596e64] file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border file:border-[#dbe6df] file:text-xs file:font-bold file:bg-[#f1f8f2] file:text-[#004f46] hover:file:bg-[#e1f6f1] file:cursor-pointer cursor-pointer"
+                />
+                <span className="text-[11px] text-[#7a8d82]">
+                  0 / 12 new Reels in the last 24h. Browser media limit 1.5 MB. No public upload.
+                </span>
+              </div>
 
-              {/* Media preview */}
-              {previewMedia && (
-                <div className="relative w-32 h-20 rounded-xl overflow-hidden border-2 border-idle-emerald shadow-sm bg-black mt-2">
-                  {isVideo ? (
-                    <video src={previewMedia} className="w-full h-full object-cover" autoPlay muted loop playsInline />
-                  ) : (
-                    <img src={previewMedia} alt="Preview" className="w-full h-full object-cover" />
-                  )}
+              {/* Media Preview or Presets */}
+              {previewMedia ? (
+                <div className="flex items-center gap-3 pt-2">
+                  <div className="relative w-36 h-24 rounded-xl overflow-hidden border-2 border-[#004f46] shadow-sm bg-black">
+                    {isVideo ? (
+                      <video src={previewMedia} className="w-full h-full object-cover" autoPlay muted loop playsInline />
+                    ) : (
+                      <img src={previewMedia} alt="Preview" className="w-full h-full object-cover" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => { setPreviewMedia(null); setIsVideo(false); }}
+                      className="absolute top-1 right-1 bg-black/75 hover:bg-black text-white rounded-full p-1 text-[10px] cursor-pointer"
+                      title="Remove media"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <div className="text-[11px] text-[#596e64]">
+                    <span className="font-bold text-[#004f46] block">{isVideo ? 'Video Clip Ready' : 'Photo Attached'}</span>
+                    <span>Ready for 24-hour local broadcast</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="pt-1">
+                  <span className="text-[11px] text-[#7a8d82] block mb-1.5">
+                    Or choose one of our demo clips:
+                  </span>
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                    {SAMPLE_MEDIA.map((url, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => { setPreviewMedia(url); setIsVideo(false); }}
+                        className="w-16 h-12 rounded-lg overflow-hidden border border-[#dbe6df] hover:border-[#004f46] shrink-0 cursor-pointer transition-transform hover:scale-105"
+                      >
+                        <img src={url} alt={`Preset ${i}`} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
-
-              {/* Sample Presets */}
-              <div className="pt-1">
-                <span className="text-[11px] text-[#7a8d82] block mb-1">Or pick a demo clip:</span>
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-                  {SAMPLE_MEDIA.map((url, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => { setPreviewMedia(url); setIsVideo(false); }}
-                      className="w-14 h-10 rounded-lg overflow-hidden border border-idle-line hover:border-idle-emerald shrink-0 cursor-pointer"
-                    >
-                      <img src={url} alt={`Option ${i}`} className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
 
-            {/* Field 6: Consent Checkbox */}
-            <label className="flex items-start gap-2.5 text-xs text-idle-muted pt-1 cursor-pointer">
+            {/* Row 4: Permission Checkbox */}
+            <label className="flex items-start gap-2 pt-1 text-xs text-[#596e64] cursor-pointer select-none">
               <input
                 type="checkbox"
                 required
                 checked={consent}
                 onChange={(e) => setConsent(e.target.checked)}
-                className="mt-0.5 rounded text-idle-emerald focus:ring-idle-emerald cursor-pointer"
+                className="mt-0.5 rounded text-[#004f46] focus:ring-[#004f46] cursor-pointer"
               />
               <span>
                 I have permission to publish the media and identifiable people shown, and I understand this demo stores the post only in my browser.
               </span>
             </label>
 
-            {/* Field 7: Submit CTA */}
-            <button
-              type="submit"
-              disabled={!consent}
-              className="gold-gradient-btn w-full py-3 rounded-xl text-xs sm:text-sm font-bold shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-transform active:scale-98"
-            >
-              Publish a 24-hour demo Reel →
-            </button>
+            {/* Row 5: Submit CTA */}
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={!consent}
+                className="gold-gradient-btn w-full py-3 rounded-xl font-bold text-xs shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-transform active:scale-98"
+              >
+                <span>Publish a 24-hour demo Reel →</span>
+              </button>
+            </div>
           </form>
         )}
       </div>

@@ -16,7 +16,8 @@ import {
 const NAV_ITEMS = [
   { id: 'home', label: 'Home', icon: Home },
   { id: 'explore', label: 'Explore', icon: Search },
-  { id: 'elite-pm', label: 'Elite PM', icon: Crown, isElite: true },
+  // Hidden per user request (kept intact for easy re-enabling)
+  { id: 'elite-pm', label: 'Elite PM', icon: Crown, isElite: true, hidden: true },
   { id: 'reels', label: 'Reels', icon: PlaySquare },
   { id: 'post', label: 'Post', icon: PlusCircle, isPost: true },
   { id: 'messages', label: 'Inbox', icon: MessageSquare },
@@ -48,7 +49,7 @@ export const SidebarNav = () => {
 
       {/* Nav Scroll Container */}
       <div className="flex-1 flex flex-col gap-1 overflow-y-auto no-scrollbar py-1">
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.filter((item) => !item.hidden).map((item) => {
           const Icon = item.icon;
           const isActive = route === item.id || (item.id === 'bookings' && route === 'transactions');
           const isElite = item.id === 'elite-pm' || item.isElite;

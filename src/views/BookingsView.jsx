@@ -1,48 +1,63 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { 
-  Briefcase, 
-  QrCode, 
-  ShieldCheck, 
-  CheckCircle2, 
-  Clock, 
-  ArrowRight, 
-  Camera, 
-  FileText,
-  DollarSign,
-  AlertCircle,
-  Lock,
-  Sparkles,
-  Zap,
+import {
+  Briefcase,
   Check,
+  Clock,
+  ShieldCheck,
+  X,
+  Star,
+  ArrowRight,
   Shield,
-  ArrowDownRight,
-  Split,
-  ChevronRight,
-  ExternalLink
+  Calendar,
+  AlertCircle
 } from 'lucide-react';
-
 import { AuthGate } from '../components/common/AuthGate';
 
 const STAGES = [
-  'Draft', 
-  'Agreement preview', 
-  'Payment review', 
-  'Handoff preview', 
+  'Draft',
+  'Agreement preview',
+  'Payment review',
+  'Handoff preview',
   'Completed'
 ];
 
 export const BookingsView = () => {
-  const { 
-    bookings, 
-    activeBooking, 
-    setActiveBooking, 
-    advanceBookingStage, 
+  const {
+    bookings,
+    listings,
+    activeBooking,
+    setActiveBooking,
+    advanceBookingStage,
     updateBooking,
-    setRoute, 
+    setRoute,
     isAuthenticated,
-    addToast 
+    addToast
   } = useApp();
+
+  // Selected booking for detailed modal view
+  const [modalBooking, setModalBooking] = useState(null);
+  const [bookingView, setBookingView] = useState('timeline'); // 'timeline' | 'confirm' | 'extension' | 'issue' | 'review'
+  const [stageFilter, setStageFilter] = useState('all'); // 'all' | 'review' | 'handoff' | 'completed'
+
+  // Tint.ai 3rd-party protection plan toggle state (preserved intact, defaulted to false while toggle is hidden)
+  const [protectionPlanOn, setProtectionPlanOn] = useState(false);
+
+  // Form states for stage confirmation, extension, issue, review
+  const [proposedDate, setProposedDate] = useState('2026-10-31');
+  const [proposedTime, setProposedTime] = useState('12:00');
+  const [conditionNotes, setConditionNotes] = useState('');
+  const [hasAcknowledged, setHasAcknowledged] = useState(false);
+  const [changeRequest, setChangeRequest] = useState('');
+  const [issuePath, setIssuePath] = useState('Direct negotiation');
+  const [issueText, setIssueText] = useState('');
+  const [issueRemedy, setIssueRemedy] = useState('');
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState('');
+
+  // Local memory for filed cases & reviews in demo
+  const [cases, setCases] = useState([]);
+  const [reviews, setReviews] = useState([]);
 
   if (!isAuthenticated) {
     return (
@@ -55,1053 +70,781 @@ export const BookingsView = () => {
     );
   }
 
-  const selectedBooking = activeBooking || bookings[0];
+  const handleOpenBooking = (b) => {
+    setModalBooking(b);
+    setBookingView('timeline');
+    // Inactive while toggle is hidden per user request
+    setProtectionPlanOn(false);
+    setHasAcknowledged(false);
+    if (setActiveBooking) setActiveBooking(b);
+  };
 
-  // Stage tab selection (defaults to current booking stage, but allows exploring other stages)
-  const [activeStageTab, setActiveStageTab] = useState(null);
-  const currentStage = activeStageTab || selectedBooking?.stage || 'Payment review';
+  const handleCloseModal = () => {
+    setModalBooking(null);
+  };
 
-  // Bookings stage filter state
-  const [bookingFilter, setBookingFilter] = useState('All');
-
-  // Tint.ai protection plan toggle state
-  const [protectionPlanOn, setProtectionPlanOn] = useState(
-    selectedBooking?.protectionPlanEnabled !== false
-  );
-
-  const filteredBookings = React.useMemo(() => {
-    if (!bookings) return [];
-    if (bookingFilter === 'All') return bookings;
-    if (bookingFilter === 'Payment') return bookings.filter(b => b.stage === 'Payment review');
-    if (bookingFilter === 'Handoff') return bookings.filter(b => b.stage === 'Handoff preview');
-    if (bookingFilter === 'Completed') return bookings.filter(b => b.stage === 'Completed');
-    return bookings;
-  }, [bookings, bookingFilter]);
-
-  // Sync toggle when switching bookings
-  React.useEffect(() => {
-    if (selectedBooking) {
-      setProtectionPlanOn(selectedBooking.protectionPlanEnabled !== false);
-      setActiveStageTab(null);
-    }
-  }, [selectedBooking?.id]);
-
-  if (!selectedBooking) {
-    return (
-      <div className="glass-card p-12 text-center rounded-3xl space-y-3">
-        <Briefcase className="w-12 h-12 text-idle-muted mx-auto" />
-        <h3 className="font-serif text-lg font-bold text-[#172d28]">No active bookings</h3>
-        <p className="text-xs text-idle-muted max-w-sm mx-auto">
-          Choose any listing from Explore and tap "Book with QR Handoff" to start a simulated agreement.
-        </p>
-        <button
-          onClick={() => setRoute('explore')}
-          className="emerald-gradient-btn px-4 py-2 rounded-xl text-xs font-bold cursor-pointer"
-        >
-          Explore Marketplace
-        </button>
-      </div>
-    );
-  }
-
-  // Pricing calculations matching client's screenshot & formula
-  const rentalDays = selectedBooking.rentalDays || 3;
-  const dailyRate = selectedBooking.price || 90;
+  // Calculations for current active modal booking
+  const currentStageIndex = modalBooking ? STAGES.indexOf(modalBooking.stage) : 0;
+  const nextStageName = currentStageIndex < STAGES.length - 1 ? STAGES[currentStageIndex + 1] : 'Completed';
+  const dailyRate = modalBooking?.price || 420;
+  const rentalDays = modalBooking?.rentalDays || 1;
   const itemSubtotal = dailyRate * rentalDays;
-  const depositHold = selectedBooking.deposit || 1500;
-  const idleCommission = Number((itemSubtotal * 0.025).toFixed(2)); // 2.5% IDLE fee
-  const lenderPayout = Number((itemSubtotal * 0.975).toFixed(2)); // 97.5% lender payout
+  const depositHold = modalBooking?.deposit || 1000;
+  const idleFee = Number((itemSubtotal * 0.025).toFixed(2)); // 2.5% platform fee
   const insurancePremium = protectionPlanOn ? Number((12.50 * rentalDays).toFixed(2)) : 0;
-  const totalAmountDue = Number((itemSubtotal + idleCommission + insurancePremium).toFixed(2));
-  const policyId = selectedBooking.policyId || 'TN-987XBC-24';
+  const totalAmountDue = Number((itemSubtotal + idleFee + insurancePremium).toFixed(2));
+  const policyId = modalBooking?.policyId || 'TN-420EPS-26';
 
-  const handleNextStage = (b) => {
-    const currentIdx = STAGES.indexOf(b.stage);
-    if (currentIdx < STAGES.length - 1) {
-      advanceBookingStage(b.id, STAGES[currentIdx + 1]);
-      setActiveStageTab(null);
-    }
-  };
-
-  const handleCompleteCheckout = () => {
-    // Record checkout authorization in booking status and advance to Handoff preview
-    if (updateBooking) {
-      updateBooking(selectedBooking.id, {
+  const handleAdvanceStage = () => {
+    if (!modalBooking) return;
+    if (currentStageIndex < STAGES.length - 1) {
+      const nextStage = STAGES[currentStageIndex + 1];
+      if (advanceBookingStage) {
+        advanceBookingStage(modalBooking.id, nextStage);
+      }
+      if (updateBooking) {
+        updateBooking(modalBooking.id, {
+          stage: nextStage,
+          total: totalAmountDue,
+          protectionPlanEnabled: protectionPlanOn
+        });
+      }
+      setModalBooking(prev => ({
+        ...prev,
+        stage: nextStage,
         total: totalAmountDue,
-        protectionPlanEnabled: protectionPlanOn,
-        stage: 'Handoff preview',
-        statusHistory: [
-          { 
-            time: 'Just now', 
-            message: `Checkout authorized: $${totalAmountDue.toFixed(2)} charged via Stripe Connect ($${lenderPayout.toFixed(2)} to lender, $${idleCommission.toFixed(2)} to IDLE). $${depositHold.toFixed(2)} deposit held on card.` 
-          },
-          ...(protectionPlanOn ? [{ time: 'Just now', message: `Tint.ai Micro-Policy ${policyId} bound & active ($${insurancePremium.toFixed(2)})` }] : []),
-          ...(selectedBooking.statusHistory || [])
-        ]
-      });
-    } else {
-      advanceBookingStage(selectedBooking.id, 'Handoff preview');
+        protectionPlanEnabled: protectionPlanOn
+      }));
+      setBookingView('timeline');
+      setHasAcknowledged(false);
+      addToast(`Recorded ${nextStage} preview! ${protectionPlanOn ? 'Tint.ai insurance policy bound.' : ''}`, 'success');
     }
-    setActiveStageTab('Handoff preview');
-    addToast(`Checkout complete! ${protectionPlanOn ? `Policy ${policyId} bound with Tint.ai. ` : ''}Custody handoff QR code ready.`, 'success');
   };
+
+  const handleSaveChange = (e) => {
+    e.preventDefault();
+    if (!changeRequest.trim()) return;
+    addToast('Change request saved locally. Awaiting provider response.', 'info');
+    setChangeRequest('');
+    setBookingView('timeline');
+  };
+
+  const handleSaveIssue = (e) => {
+    e.preventDefault();
+    if (!issueText.trim() || !issueRemedy.trim()) return;
+    setCases(prev => [
+      ...prev,
+      {
+        bookingId: modalBooking.id,
+        path: issuePath,
+        status: 'Open review',
+        description: issueText,
+        remedy: issueRemedy,
+        time: Date.now()
+      }
+    ]);
+    addToast('Issue record created locally. Support notified.', 'warning');
+    setIssueText('');
+    setIssueRemedy('');
+    setBookingView('timeline');
+  };
+
+  const handleSaveReview = (e) => {
+    e.preventDefault();
+    if (!reviewText.trim()) return;
+    setReviews(prev => [
+      ...prev,
+      {
+        bookingId: modalBooking.id,
+        rating: reviewRating,
+        text: reviewText,
+        time: Date.now()
+      }
+    ]);
+    addToast('Review submitted! Thank you for your feedback.', 'success');
+    setReviewText('');
+    setBookingView('timeline');
+  };
+
+  const resolveItemImage = (b) => {
+    if (b.image) return b.image;
+    if (b.conditionPhotos?.[0]) return b.conditionPhotos[0];
+    const found = listings?.find(l => l.id === b.listingId || l.title?.toLowerCase() === (b.listingTitle || b.title)?.toLowerCase());
+    if (found?.image) return found.image;
+    return 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80';
+  };
+
+  const getStageMeta = (stage) => {
+    switch (stage) {
+      case 'Draft':
+        return { step: 1, label: 'Draft Pending', bg: 'bg-slate-100 text-slate-700 border-slate-200', dot: 'bg-slate-400' };
+      case 'Agreement preview':
+        return { step: 2, label: 'Agreement Preview', bg: 'bg-blue-50 text-blue-800 border-blue-200', dot: 'bg-blue-500' };
+      case 'Payment review':
+        return { step: 3, label: 'Payment Review', bg: 'bg-amber-50 text-amber-800 border-amber-200', dot: 'bg-amber-500' };
+      case 'Handoff preview':
+        return { step: 4, label: 'Ready for QR Handoff', bg: 'bg-emerald-50 text-emerald-800 border-emerald-200', dot: 'bg-emerald-500' };
+      case 'Completed':
+        return { step: 5, label: 'Completed & Fulfilled', bg: 'bg-purple-50 text-purple-800 border-purple-200', dot: 'bg-purple-500' };
+      default:
+        return { step: 3, label: stage, bg: 'bg-amber-50 text-amber-800 border-amber-200', dot: 'bg-amber-500' };
+    }
+  };
+
+  const inReviewCount = bookings.filter(b => b.stage === 'Payment review' || b.stage === 'Agreement preview').length;
+  const handoffCount = bookings.filter(b => b.stage === 'Handoff preview').length;
+  const completedCount = bookings.filter(b => b.stage === 'Completed').length;
+
+  const filteredBookings = bookings.filter(b => {
+    if (stageFilter === 'review') return b.stage === 'Payment review' || b.stage === 'Agreement preview';
+    if (stageFilter === 'handoff') return b.stage === 'Handoff preview';
+    if (stageFilter === 'completed') return b.stage === 'Completed';
+    return true;
+  });
 
   return (
-    <div className="space-y-8 pb-16">
-      {/* Page Heading */}
+    <div className="space-y-6 pb-16">
+      {/* Page Heading matching Prototype & User Screenshot */}
       <div>
-        <span className="text-[10px] font-bold uppercase tracking-wider text-idle-gold block">
-          Custody & Agreements
-        </span>
-        <h1 className="font-serif text-2xl sm:text-4xl font-bold text-[#082f2c] mt-0.5">
-          Bookings & Transactions.
+        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#082f2c] tracking-tight">
+          Bookings & transaction records.
         </h1>
-        <p className="text-xs sm:text-sm text-idle-muted mt-1 max-w-2xl">
-          Move through the 5-stage transaction lifecycle. Includes automated Tint.ai third-party protection underwriting, Stripe Connect payout routing (97.5% lender / 2.5% IDLE), and single-use dynamic QR custody verification.
+        <p className="text-xs sm:text-sm text-[#6c7d70] mt-1.5 leading-relaxed">
+          Illustrative booking stages. No payment holds, charges, QR authorization or real agreements occur.
         </p>
       </div>
 
-      {/* Active Bookings Luxury Cards Carousel & Quick Filter */}
-      {bookings && bookings.length > 1 && (
-        <div className="space-y-3">
-          {/* Header Row with Filter Pills */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-idle-emerald/15 flex items-center justify-center text-idle-emerald">
-                <Briefcase className="w-3.5 h-3.5" />
-              </div>
-              <h3 className="text-xs sm:text-sm font-bold text-[#172d28] uppercase tracking-wider flex items-center gap-2">
-                <span>Active Bookings</span>
-                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-idle-mint text-idle-emerald">
-                  {bookings.length}
-                </span>
-              </h3>
-            </div>
+      {/* Top Usage & Protection Overview Metrics */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-white border border-[#dce8df] rounded-2xl p-4 flex flex-col gap-1 shadow-2xs">
+          <strong className="text-xl sm:text-2xl font-bold text-[#004f46]">{bookings.length}</strong>
+          <span className="text-xs text-[#6c7c73]">Total Records</span>
+        </div>
+        <div className="bg-white border border-[#dce8df] rounded-2xl p-4 flex flex-col gap-1 shadow-2xs">
+          <strong className="text-xl sm:text-2xl font-bold text-amber-700">{inReviewCount}</strong>
+          <span className="text-xs text-[#6c7c73]">Needs Review</span>
+        </div>
+        <div className="bg-white border border-[#dce8df] rounded-2xl p-4 flex flex-col gap-1 shadow-2xs">
+          <strong className="text-xl sm:text-2xl font-bold text-emerald-700">{handoffCount}</strong>
+          <span className="text-xs text-[#6c7c73]">Ready for Handoff</span>
+        </div>
+        <div className="bg-white border border-[#dce8df] rounded-2xl p-4 flex flex-col gap-1 shadow-2xs">
+          <strong className="text-xl sm:text-2xl font-bold text-[#004f46]">100%</strong>
+          <span className="text-xs text-[#6c7c73]">🛡️ Tint.ai Protected</span>
+        </div>
+      </div>
 
-            {/* Quick Filter Stage Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-              {['All', 'Payment', 'Handoff', 'Completed'].map((tab) => {
-                const isCurrentFilter = bookingFilter === tab;
-                const count = tab === 'All' 
-                  ? bookings.length 
-                  : bookings.filter(b => {
-                      if (tab === 'Payment') return b.stage === 'Payment review';
-                      if (tab === 'Handoff') return b.stage === 'Handoff preview';
-                      if (tab === 'Completed') return b.stage === 'Completed';
-                      return true;
-                    }).length;
-                return (
-                  <button
-                    key={tab}
-                    type="button"
-                    onClick={() => setBookingFilter(tab)}
-                    className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                      isCurrentFilter
-                        ? 'bg-[#004f46] text-white shadow-xs'
-                        : 'bg-white hover:bg-gray-100 text-idle-muted border border-idle-line'
-                    }`}
-                  >
-                    <span>{tab}</span>
-                    <span className={`text-[9px] px-1.5 py-0.2 rounded-full ${
-                      isCurrentFilter ? 'bg-idle-gold text-[#002822] font-extrabold' : 'bg-gray-100 text-gray-500'
-                    }`}>
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+      {/* Filter Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <button
+          type="button"
+          onClick={() => setStageFilter('all')}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
+            stageFilter === 'all'
+              ? 'bg-[#004f46] text-white shadow-2xs'
+              : 'bg-white border border-[#dce8df] text-[#596e64] hover:bg-[#f4f8f6]'
+          }`}
+        >
+          All Records ({bookings.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setStageFilter('review')}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
+            stageFilter === 'review'
+              ? 'bg-[#004f46] text-white shadow-2xs'
+              : 'bg-white border border-[#dce8df] text-[#596e64] hover:bg-[#f4f8f6]'
+          }`}
+        >
+          Needs Review ({inReviewCount})
+        </button>
+        <button
+          type="button"
+          onClick={() => setStageFilter('handoff')}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
+            stageFilter === 'handoff'
+              ? 'bg-[#004f46] text-white shadow-2xs'
+              : 'bg-white border border-[#dce8df] text-[#596e64] hover:bg-[#f4f8f6]'
+          }`}
+        >
+          Ready for Handoff ({handoffCount})
+        </button>
+        <button
+          type="button"
+          onClick={() => setStageFilter('completed')}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
+            stageFilter === 'completed'
+              ? 'bg-[#004f46] text-white shadow-2xs'
+              : 'bg-white border border-[#dce8df] text-[#596e64] hover:bg-[#f4f8f6]'
+          }`}
+        >
+          Completed ({completedCount})
+        </button>
+      </div>
 
-          {/* Luxury Horizontal Cards Rail */}
-          <div className="flex items-stretch gap-3 overflow-x-auto pb-2.5 pt-1 pl-0.5 no-scrollbar snap-x">
-            {filteredBookings.map((b) => {
-              const isSelected = selectedBooking?.id === b.id;
-              const bDays = b.rentalDays || 3;
-              const bSubtotal = (b.price || 90) * bDays;
-              const bTotal = b.total || Number((bSubtotal + Number((bSubtotal * 0.025).toFixed(2)) + (b.protectionPlanEnabled !== false ? Number((12.50 * bDays).toFixed(2)) : 0)).toFixed(2));
-              const itemImg = b.image || b.conditionPhotos?.[0] || 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=300&q=80';
+      {/* Rich Illustrated Bookings Cards List */}
+      {filteredBookings.length > 0 ? (
+        <div className="space-y-3.5">
+          {filteredBookings.map((b) => {
+            const title = b.listingTitle || b.title || 'Listing item';
+            const dateStr = b.dates || (b.created ? new Date(b.created).toLocaleDateString() : '10/31/2026');
+            const stage = b.stage || 'Draft';
+            const stageMeta = getStageMeta(stage);
+            const itemImg = resolveItemImage(b);
+            const providerName = b.provider || 'Verified Host';
 
-              // Stage styling helper
-              const getStageBadge = (stage) => {
-                switch (stage) {
-                  case 'Payment review':
-                    return { label: 'Payment Due', color: 'bg-amber-100 text-amber-900 border-amber-300' };
-                  case 'Handoff preview':
-                    return { label: 'Handoff Ready', color: 'bg-emerald-100 text-emerald-900 border-emerald-300' };
-                  case 'Completed':
-                    return { label: 'Completed', color: 'bg-gray-100 text-gray-700 border-gray-200' };
-                  case 'Draft':
-                    return { label: 'Draft', color: 'bg-yellow-50 text-yellow-800 border-yellow-200' };
-                  default:
-                    return { label: stage || 'Agreement', color: 'bg-teal-50 text-teal-800 border-teal-200' };
-                }
-              };
-
-              const stageBadge = getStageBadge(b.stage);
-
-              return (
-                <button
-                  key={b.id}
-                  type="button"
-                  onClick={() => {
-                    setActiveBooking(b);
-                    setActiveStageTab(null);
-                  }}
-                  className={`min-w-[260px] sm:min-w-[280px] max-w-[300px] p-3 rounded-2xl border text-left transition-all duration-200 cursor-pointer snap-start flex items-center gap-3 shrink-0 relative ${
-                    isSelected
-                      ? 'bg-gradient-to-br from-[#02332c] to-[#01241f] text-white border-idle-gold/80 shadow-lg ring-2 ring-idle-gold/50 scale-[1.01]'
-                      : 'bg-white hover:bg-[#fbfdfc] border-idle-line text-[#172d28] hover:shadow-md hover:border-idle-emerald/40'
-                  }`}
-                >
-                  {/* Item Image Thumbnail */}
-                  <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-white/20">
-                    <img
-                      src={itemImg}
-                      alt={b.listingTitle}
-                      className="w-full h-full object-cover"
+            return (
+              <article
+                key={b.id}
+                className="bg-white border border-[#dce8df] hover:border-[#b4d1c0] rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xs transition-all"
+              >
+                {/* Left Side: Thumbnail + Metadata */}
+                <div className="flex items-start sm:items-center gap-3.5 sm:gap-4 w-full md:w-auto">
+                  {/* Picture Thumbnail */}
+                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden shrink-0 border border-[#dee8e1] shadow-2xs bg-[#f4f8f6]">
+                    <img 
+                      src={itemImg} 
+                      alt={title} 
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105" 
                     />
-                    {isSelected && (
-                      <div className="absolute inset-0 bg-[#004f46]/40 backdrop-blur-[1px] flex items-center justify-center">
-                        <span className="w-5 h-5 rounded-full bg-idle-gold text-[#002822] flex items-center justify-center font-extrabold text-[10px]">
-                          ✓
-                        </span>
-                      </div>
-                    )}
                   </div>
 
-                  {/* Booking Metadata */}
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex items-center justify-between gap-1.5">
-                      <span className={`text-[10px] font-mono font-extrabold ${isSelected ? 'text-idle-gold' : 'text-idle-emerald'}`}>
+                  {/* Metadata */}
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#9b782c] bg-amber-50/80 px-2 py-0.5 rounded-md border border-amber-200/50">
                         {b.id}
                       </span>
-                      <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md border ${
-                        isSelected ? 'bg-white/10 text-emerald-200 border-white/20' : stageBadge.color
-                      }`}>
-                        {stageBadge.label}
+                      <span className="text-[11px] text-[#718278]">
+                        {providerName}
                       </span>
                     </div>
 
-                    <h4 className={`text-xs font-bold truncate leading-tight ${isSelected ? 'text-white' : 'text-[#172d28]'}`}>
-                      {b.listingTitle}
-                    </h4>
+                    <h3 className="font-bold text-[#0e2e28] text-base sm:text-lg leading-snug line-clamp-1">
+                      {title}
+                    </h3>
 
-                    <div className="flex items-center justify-between gap-2 pt-0.5">
-                      <span className={`text-[10px] truncate ${isSelected ? 'text-emerald-200/70' : 'text-idle-muted'}`}>
-                        {b.provider}
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-[#596e64] pt-0.5">
+                      <span className="flex items-center gap-1 font-medium">
+                        <Calendar className="w-3.5 h-3.5 text-[#004f46]" />
+                        <span>{dateStr}</span>
                       </span>
-                      <strong className={`text-xs font-extrabold ${isSelected ? 'text-idle-gold' : 'text-[#004f46]'}`}>
-                        ${bTotal.toFixed(2)}
-                      </strong>
+
+                      <span className="flex items-center gap-1 text-[11px] font-semibold text-[#004f46] bg-[#edf7f3] px-2 py-0.5 rounded-full border border-[#cbe4d7]">
+                        <ShieldCheck className="w-3 h-3 text-[#004f46]" />
+                        <span>Tint.ai Protected</span>
+                      </span>
                     </div>
                   </div>
-                </button>
-              );
-            })}
-          </div>
+                </div>
+
+                {/* Right Side: Status Progress + Price + CTA */}
+                <div className="flex items-center justify-between md:justify-end gap-4 sm:gap-6 w-full md:w-auto pt-3 md:pt-0 border-t md:border-t-0 border-[#f0f4f1]">
+                  {/* Status Badge & Step Indicator */}
+                  <div className="space-y-1 text-left md:text-right">
+                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${stageMeta.bg}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${stageMeta.dot}`} />
+                      <span>{stageMeta.label}</span>
+                    </div>
+                    <div className="text-[11px] text-[#718278] block">
+                      Step {stageMeta.step} of 5
+                    </div>
+                  </div>
+
+                  {/* Price */}
+                  <div className="text-right">
+                    <div className="font-bold text-[#004f46] text-lg sm:text-xl leading-none">
+                      ${b.price}
+                    </div>
+                    <span className="text-[10px] text-[#718278]">
+                      {b.unit ? `per ${b.unit}` : 'total'}
+                    </span>
+                  </div>
+
+                  {/* Open Button */}
+                  <button
+                    type="button"
+                    onClick={() => handleOpenBooking(b)}
+                    className="px-4 py-2.5 rounded-xl border border-[#004f46] bg-white text-[#004f46] hover:bg-[#004f46] hover:text-white font-bold text-xs shadow-2xs transition-all cursor-pointer whitespace-nowrap active:scale-98"
+                  >
+                    Open →
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="glass-card p-12 text-center rounded-3xl space-y-3 bg-white border border-[#dee8e1]">
+          <Briefcase className="w-12 h-12 text-idle-muted mx-auto" />
+          <h3 className="font-serif text-lg font-bold text-[#172d28]">No records in this filter</h3>
+          <p className="text-xs text-idle-muted max-w-sm mx-auto">
+            Switch filter or explore the marketplace to start a booking.
+          </p>
+          <button
+            onClick={() => setStageFilter('all')}
+            className="emerald-gradient-btn px-4 py-2 rounded-xl text-xs font-bold cursor-pointer"
+          >
+            Show all bookings
+          </button>
         </div>
       )}
 
-      {/* Main Selected Booking Card */}
-      <div className="glass-card p-5 sm:p-7 md:p-8 rounded-3xl border border-idle-emerald/20 shadow-glass space-y-6">
-        {/* Booking Card Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-idle-line pb-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-bold text-idle-emerald bg-idle-mint px-2.5 py-0.5 rounded-full">
-                {selectedBooking.id}
-              </span>
-              <span className="text-xs text-idle-muted">
-                Lender / Provider: <strong>{selectedBooking.provider}</strong>
-              </span>
-              {selectedBooking.dates && (
-                <span className="text-xs text-[#004f46] bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-md font-semibold">
-                  {selectedBooking.dates}
-                </span>
-              )}
-            </div>
-            <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#0d2e29]">
-              {selectedBooking.listingTitle}
-            </h2>
-          </div>
-
-          <div className="text-left sm:text-right">
-            <div className="flex items-baseline sm:justify-end gap-1.5">
-              <span className="text-2xl sm:text-3xl font-extrabold text-[#004f46]">
-                ${totalAmountDue.toFixed(2)}
-              </span>
-              <span className="text-xs font-bold text-idle-muted uppercase tracking-wider">
-                Total Due
-              </span>
-            </div>
-            <span className="text-[11px] text-amber-700 font-semibold block mt-0.5">
-              + ${depositHold.toFixed(2)} refundable deposit hold (released upon return)
-            </span>
-          </div>
+      {/* What an IDLE transaction will support Panel matching Prototype */}
+      <section className="section">
+        <div className="p-5 rounded-2xl bg-[#f5f8f6] border border-[#dce7e0] text-[#334d42] space-y-1">
+          <strong className="block text-sm font-bold text-[#004f46]">
+            What an IDLE transaction will support
+          </strong>
+          <p className="text-xs text-[#60766a] leading-relaxed">
+            Offers, acceptance records, condition photos, agreed timing, fee approval, QR handoffs, completion, reviews, issue evidence and independent referral. This preview simulates transitions and does not authorize any funds or provider actions.
+          </p>
         </div>
+      </section>
 
-        {/* Interactive 5-Stage Stepper Bar */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-idle-muted block">
-              Lifecycle Progress · Click any stage to inspect details
-            </span>
-            <span className="text-xs font-bold text-idle-emerald">
-              Active Stage: <strong className="text-[#004f46]">{currentStage}</strong>
-            </span>
-          </div>
+      {/* Transaction / Booking Detail Modal Dialog matching Prototype */}
+      {modalBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="booking-dialog animate-in zoom-in-95 duration-150">
+            {/* Close button */}
+            <button
+              type="button"
+              onClick={handleCloseModal}
+              className="absolute top-4 right-4 p-1.5 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+              aria-label="Close transaction"
+            >
+              <X className="w-5 h-5" />
+            </button>
 
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-            {STAGES.map((stg, i) => {
-              const bookingStageIdx = STAGES.indexOf(selectedBooking.stage);
-              const isPassed = i <= bookingStageIdx;
-              const isSelectedTab = currentStage === stg;
-              return (
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-idle-gold block">
+              IDLE transaction center · local preview
+            </span>
+
+            {/* Header */}
+            <div className="booking-header">
+              <div>
+                <h2>{modalBooking.listingTitle || modalBooking.title || 'Listing Item'}</h2>
+                <p>
+                  Listed amount: <strong>${modalBooking.price}</strong> · {modalBooking.provider || modalBooking.owner || 'Northline Operations'}
+                </p>
+              </div>
+              <span className="status demo">
+                {modalBooking.stage}
+              </span>
+            </div>
+
+            {/* Action Navigation Buttons */}
+            <div className="booking-actions">
+              <button
+                type="button"
+                onClick={() => setBookingView('timeline')}
+                className={`btn ${bookingView === 'timeline' ? 'bg-[#004f46] text-white' : 'border border-[#cadbd2] text-[#004f46] hover:bg-gray-50'}`}
+              >
+                Timeline
+              </button>
+              {currentStageIndex < 4 && (
                 <button
                   type="button"
-                  key={stg}
-                  onClick={() => setActiveStageTab(stg)}
-                  className={`p-2.5 sm:p-3 rounded-2xl border text-center transition-all cursor-pointer ${
-                    isSelectedTab
-                      ? 'bg-idle-emerald text-white border-idle-emerald shadow-md ring-2 ring-idle-gold/60 scale-[1.02]'
-                      : isPassed
-                        ? 'bg-idle-mint/80 border-idle-emerald/40 text-idle-emerald font-semibold hover:bg-idle-mint'
-                        : 'bg-[#f8faf9] border-idle-line text-idle-muted hover:bg-gray-100/80'
-                  }`}
+                  onClick={() => setBookingView('extension')}
+                  className={`btn ${bookingView === 'extension' ? 'bg-[#004f46] text-white' : 'border border-[#cadbd2] text-[#004f46] hover:bg-gray-50'}`}
                 >
-                  <div className="flex items-center justify-center mb-1">
-                    {isPassed ? (
-                      <CheckCircle2 className={`w-4 h-4 ${isSelectedTab ? 'text-idle-gold' : 'text-idle-emerald'}`} />
-                    ) : (
-                      <span className="w-4 h-4 rounded-full border border-current text-[10px] flex items-center justify-center font-bold">
-                        {i + 1}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-[11px] font-bold block truncate">{stg}</span>
+                  Request a change
                 </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* STAGE 3: PAYMENT REVIEW & PROTECTION PLAN (MATCHING CLIENT SCREENSHOT) */}
-        {currentStage === 'Payment review' && (
-          <div className="space-y-6 pt-2">
-            {/* Visual Process Architecture Flowchart (Replicating Screenshot Diagram) */}
-            <div className="rounded-2xl bg-gradient-to-br from-[#02241e] via-[#021f1a] to-[#011713] p-4 sm:p-5 text-white border border-idle-gold/30 shadow-xl overflow-hidden relative">
-              <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2.5">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-idle-gold/20 border border-idle-gold/40 flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-idle-gold" />
-                  </div>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-bold text-white tracking-wide">
-                      IDLE Checkout Architecture · Stripe Connect & Tint.ai Protocol
-                    </h3>
-                    <p className="text-[10px] text-emerald-200/70">
-                      Dynamic split routing, instant underwriting, and automated pre-authorization hold
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-idle-gold/15 text-idle-gold border border-idle-gold/30 hidden sm:inline-block">
-                  API ROUTE: v2.4/checkout
-                </span>
-              </div>
-
-              {/* Responsive Flowchart Diagram */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
-                {/* Step 1: Initiate */}
-                <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] font-bold text-idle-goldLight uppercase">1. Order Details</span>
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                  </div>
-                  <div className="font-bold text-white truncate">{selectedBooking.listingTitle}</div>
-                  <div className="text-[11px] text-emerald-200/70 mt-1">
-                    {rentalDays} days @ ${dailyRate}/day (${itemSubtotal.toFixed(2)})
-                  </div>
-                </div>
-
-                {/* Step 2: Protection Plan Fork */}
-                <div className={`p-3 rounded-xl border transition-all flex flex-col justify-between ${
-                  protectionPlanOn
-                    ? 'bg-idle-gold/15 border-idle-gold text-white ring-1 ring-idle-gold/50'
-                    : 'bg-white/5 border-white/10 text-white/70'
-                }`}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] font-bold text-idle-gold uppercase">2. Tint.ai API</span>
-                    <span className={`w-2 h-2 rounded-full ${protectionPlanOn ? 'bg-idle-gold animate-pulse' : 'bg-gray-500'}`} />
-                  </div>
-                  <div className="font-bold truncate">
-                    {protectionPlanOn ? 'Third-Party Plan Active' : 'Standard Payflow'}
-                  </div>
-                  <div className="text-[11px] text-emerald-200/70 mt-1">
-                    {protectionPlanOn ? `$12.50/day (Policy: ${policyId})` : 'No insurance premium added'}
-                  </div>
-                </div>
-
-                {/* Step 3: Stripe Connect Gateway */}
-                <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] font-bold text-idle-goldLight uppercase">3. Stripe Connect</span>
-                    <Lock className="w-3 h-3 text-emerald-400" />
-                  </div>
-                  <div className="font-bold text-white truncate">97.5% / 2.5% Split</div>
-                  <div className="text-[11px] text-emerald-200/70 mt-1">
-                    Lender: ${lenderPayout.toFixed(2)} · IDLE: ${idleCommission.toFixed(2)}
-                  </div>
-                </div>
-
-                {/* Step 4: Deposit Pre-Auth */}
-                <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] font-bold text-idle-goldLight uppercase">4. Deposit Hold</span>
-                    <ShieldCheck className="w-3.5 h-3.5 text-idle-gold" />
-                  </div>
-                  <div className="font-bold text-white truncate">${depositHold.toFixed(2)} Card Hold</div>
-                  <div className="text-[11px] text-emerald-200/70 mt-1">
-                    Released upon return inspection
-                  </div>
-                </div>
-              </div>
+              )}
+              <button
+                type="button"
+                onClick={() => setBookingView('issue')}
+                className={`btn ${bookingView === 'issue' ? 'bg-[#004f46] text-white' : 'border border-[#cadbd2] text-[#004f46] hover:bg-gray-50'}`}
+              >
+                Report issue
+              </button>
+              {currentStageIndex === 4 && (
+                <button
+                  type="button"
+                  onClick={() => setBookingView('review')}
+                  className={`btn ${bookingView === 'review' ? 'gold-gradient-btn' : 'border border-[#cadbd2] text-[#004f46] hover:bg-gray-50'}`}
+                >
+                  Leave a review
+                </button>
+              )}
             </div>
 
-            {/* Main Interactive Checkout Interface */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Left Column: Protection Plan Toggle & Policy Details (7 Cols) */}
-              <div className="lg:col-span-7 space-y-4">
-                {/* Rental Item Summary Box */}
-                <div className="p-4 rounded-2xl bg-white border border-idle-line flex items-center gap-3.5 shadow-2xs">
-                  <img
-                    src={selectedBooking.image || selectedBooking.conditionPhotos?.[0] || 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=400&q=80'}
-                    alt={selectedBooking.listingTitle}
-                    className="w-16 h-16 rounded-xl object-cover border border-idle-line shrink-0"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <span className="text-[10px] font-bold text-idle-gold uppercase tracking-wider block">
-                      Rental Item Details
-                    </span>
-                    <h4 className="text-sm font-bold text-[#172d28] truncate">
-                      {selectedBooking.listingTitle}
-                    </h4>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-idle-muted mt-0.5">
-                      <span>Lender: <strong className="text-[#172d28]">{selectedBooking.provider}</strong></span>
-                      <span>•</span>
-                      <span>Dates: <strong>{selectedBooking.dates || `${rentalDays} days`}</strong></span>
-                      <span>•</span>
-                      <span>Rate: <strong>${dailyRate}/{selectedBooking.unit || 'day'}</strong></span>
-                    </div>
-                  </div>
+            {/* Pane 1: TIMELINE VIEW */}
+            {bookingView === 'timeline' && (
+              <div className="space-y-4">
+                <div className="booking-timeline">
+                  {STAGES.map((step, idx) => {
+                    const isDone = idx <= currentStageIndex;
+                    const isCurrent = idx === currentStageIndex;
+                    return (
+                      <div key={step} className={`booking-step ${isDone ? 'done' : ''}`}>
+                        <span>
+                          {idx < currentStageIndex ? (
+                            <Check className="w-4 h-4 stroke-[3]" />
+                          ) : isCurrent ? (
+                            <Clock className="w-4 h-4" />
+                          ) : (
+                            idx + 1
+                          )}
+                        </span>
+                        <div>
+                          <strong>{step}</strong>
+                          <small>
+                            {isCurrent ? 'Current stage' : idx < currentStageIndex ? 'Previewed' : 'Not yet reached'}
+                          </small>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
-                {/* 5. Payment and protection plan: The Tint.ai Toggle Card */}
-                <div className={`p-5 rounded-2xl border transition-all ${
-                  protectionPlanOn
-                    ? 'bg-gradient-to-br from-[#fcf9f2] to-[#f9f5e8] border-idle-gold/70 shadow-md ring-1 ring-idle-gold/30'
-                    : 'bg-white border-idle-line'
-                }`}>
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-idle-gold" />
-                        <h4 className="text-sm font-bold text-[#172d28]">
-                          Add Third-Party Protection Plan
-                        </h4>
-                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-idle-gold/20 text-[#855f10]">
-                          Optional
-                        </span>
-                      </div>
-                      <p className="text-xs text-[#425d54] max-w-md">
-                        Toggle on to add optional damage & theft coverage via <strong>Tint.ai</strong>. (Estimated $12.50/day)
-                      </p>
-                    </div>
-
-                    {/* Pristine Standard iOS / Tailwind UI Toggle Switch */}
-                    <div className="flex items-center gap-2.5 shrink-0">
-                      <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full select-none transition-colors ${
-                        protectionPlanOn
-                          ? 'bg-idle-gold/20 text-[#855f10] border border-idle-gold/40'
-                          : 'bg-gray-100 text-gray-500 border border-gray-200'
-                      }`}>
-                        {protectionPlanOn ? 'Active' : 'Off'}
-                      </span>
-
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={protectionPlanOn}
-                        onClick={() => setProtectionPlanOn(!protectionPlanOn)}
-                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-idle-gold/50 ${
-                          protectionPlanOn
-                            ? 'bg-gradient-to-r from-amber-500 to-idle-gold shadow-sm'
-                            : 'bg-gray-300 hover:bg-gray-400'
-                        }`}
-                      >
-                        <span className="sr-only">Toggle Tint.ai Protection Plan</span>
-                        <span
-                          aria-hidden="true"
-                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                            protectionPlanOn ? 'translate-x-5' : 'translate-x-0'
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Gold-bordered Insurance Summary Box (Displayed When Toggle is ON) */}
-                  {protectionPlanOn ? (
-                    <div className="mt-4 p-4 rounded-xl bg-white/90 border border-idle-gold/50 shadow-xs space-y-2.5 animate-in fade-in duration-200">
-                      <div className="flex items-center justify-between border-b border-idle-gold/20 pb-2">
-                        <div className="flex items-center gap-1.5">
-                          <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                          <span className="text-xs font-extrabold text-[#1a3830]">
-                            Insurance Summary
-                          </span>
-                        </div>
-                        <span className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">
-                          ✓
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                        <div>
-                          <span className="text-[11px] text-idle-muted block">Coverage Provider:</span>
-                          <strong className="text-[#172d28]">Tint.ai</strong>
-                        </div>
-                        <div>
-                          <span className="text-[11px] text-idle-muted block">Premium Total:</span>
-                          <strong className="text-[#004f46]">
-                            ${insurancePremium.toFixed(2)}{' '}
-                            <span className="text-[10px] font-normal text-idle-muted">
-                              ({rentalDays} days @ $12.50/day)
-                            </span>
-                          </strong>
-                        </div>
-                        <div>
-                          <span className="text-[11px] text-idle-muted block">Coverage Policy ID:</span>
-                          <span className="font-mono font-bold text-[#1a3830]">{policyId}</span>
-                        </div>
-                        <div>
-                          <span className="text-[11px] text-idle-muted block">Scope of Coverage:</span>
-                          <span className="text-[#2b4d44] font-medium">Drops, spills, field transit & theft</span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="mt-3 p-3 rounded-xl bg-gray-50 border border-gray-200 text-xs text-idle-muted flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 text-gray-400 shrink-0" />
-                      <span>
-                        Standard rental payflow selected. Renter assumes primary liability under standard terms.
-                      </span>
-                    </div>
-                  )}
+                <div className="booking-notice">
+                  Every stage is a local demonstration. It does not create a legally binding agreement, capture a payment, issue a scannable QR code or contact the other participant.
                 </div>
 
-                {/* Stripe Connect Automated Payout Distribution Cards */}
-                <div className="p-4 rounded-2xl bg-white border border-idle-line space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#172d28] flex items-center gap-1.5">
-                      <Split className="w-3.5 h-3.5 text-idle-emerald" />
-                      <span>Stripe Connect Payout Distribution</span>
-                    </span>
-                    <span className="text-[10px] font-semibold text-idle-emerald bg-idle-mint px-2 py-0.5 rounded-full">
-                      Automated Split
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 text-xs">
-                    <div className="p-2.5 rounded-xl bg-[#f7faf8] border border-idle-line">
-                      <span className="text-[10px] font-bold text-idle-muted uppercase block">
-                        To Lender (97.5%)
-                      </span>
-                      <strong className="text-sm font-extrabold text-[#004f46]">
-                        ${lenderPayout.toFixed(2)}
-                      </strong>
-                      <span className="text-[10px] text-idle-muted block truncate">
-                        Dispatched to {selectedBooking.provider}
-                      </span>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-[#f7faf8] border border-idle-line">
-                      <span className="text-[10px] font-bold text-idle-muted uppercase block">
-                        To IDLE (2.5%)
-                      </span>
-                      <strong className="text-sm font-extrabold text-[#172d28]">
-                        ${idleCommission.toFixed(2)}
-                      </strong>
-                      <span className="text-[10px] text-idle-muted block truncate">
-                        Platform custody commission
-                      </span>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-[#f7faf8] border border-idle-line col-span-2 sm:col-span-1">
-                      <span className="text-[10px] font-bold text-idle-muted uppercase block">
-                        To Underwriter (Tint.ai)
-                      </span>
-                      <strong className="text-sm font-extrabold text-[#855f10]">
-                        ${insurancePremium.toFixed(2)}
-                      </strong>
-                      <span className="text-[10px] text-idle-muted block truncate">
-                        {protectionPlanOn ? 'Policy underwriting fee' : 'No policy opted'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column: Checkout Breakdown & Complete Button (5 Cols) */}
-              <div className="lg:col-span-5 space-y-4">
-                <div className="p-5 rounded-2xl bg-white border border-idle-line shadow-xs space-y-4">
-                  <div className="flex items-center justify-between border-b border-idle-line pb-3">
-                    <h4 className="font-serif text-base font-bold text-[#172d28] flex items-center gap-1.5">
-                      <Lock className="w-4 h-4 text-idle-emerald" />
-                      <span>Order Summary</span>
-                    </h4>
-                    <span className="text-[11px] font-medium text-idle-muted">
-                      Stripe Protected
-                    </span>
-                  </div>
-
-                  {/* Pricing Breakdown Lines */}
-                  <div className="space-y-2.5 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-idle-muted">
-                        Item Subtotal ({rentalDays} days @ ${dailyRate}/day):
-                      </span>
-                      <strong className="text-[#172d28] font-bold">${itemSubtotal.toFixed(2)}</strong>
-                    </div>
-
-                    {/* Crucial Requirement 3: Separate Security Deposit Hold */}
-                    <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/70 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-amber-900 flex items-center gap-1">
-                          <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
-                          <span>Security Deposit Hold:</span>
-                        </span>
-                        <strong className="text-amber-900 font-extrabold">${depositHold.toFixed(2)}</strong>
-                      </div>
-                      <p className="text-[10px] text-amber-800 leading-tight">
-                        Held on card & released after return inspection. <strong>Not part of the amount charged today.</strong>
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-idle-muted">IDLE Service Fee (2.5%):</span>
-                      <strong className="text-[#172d28] font-bold">${idleCommission.toFixed(2)}</strong>
-                    </div>
-
-                    {protectionPlanOn && (
-                      <div className="flex items-center justify-between text-idle-emerald font-semibold">
-                        <span className="flex items-center gap-1">
-                          <ShieldCheck className="w-3.5 h-3.5" />
-                          <span>Tint.ai Protection Plan ({rentalDays} days):</span>
-                        </span>
-                        <strong>+${insurancePremium.toFixed(2)}</strong>
-                      </div>
-                    )}
-
-                    <div className="h-px bg-idle-line my-2" />
-
-                    {/* Total Amount Due */}
-                    <div className="flex items-baseline justify-between pt-1">
-                      <div>
-                        <span className="text-xs font-bold uppercase tracking-wider text-[#172d28] block">
-                          Total Amount Due
-                        </span>
-                        <span className="text-[10px] text-idle-muted">
-                          (Item + 2.5% fee {protectionPlanOn ? '+ Tint.ai insurance' : ''})
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-2xl font-extrabold text-[#004f46]">
-                          ${totalAmountDue.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Checkout CTA Button (Matching Screenshot) */}
+                {currentStageIndex < 4 ? (
                   <button
                     type="button"
-                    onClick={handleCompleteCheckout}
-                    className="w-full gold-gradient-btn py-3.5 px-4 rounded-xl text-sm font-extrabold shadow-md flex items-center justify-center gap-2 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99]"
+                    onClick={() => setBookingView('confirm')}
+                    className="gold-gradient-btn w-full py-3 rounded-xl text-xs sm:text-sm font-bold shadow-md cursor-pointer"
                   >
-                    <Lock className="w-4 h-4 stroke-[2.5]" />
-                    <span>COMPLETE SECURE CHECKOUT</span>
+                    Review {STAGES[currentStageIndex + 1]} →
                   </button>
-
-                  <div className="text-center space-y-1">
-                    <span className="text-[10px] text-idle-muted block">
-                      Guaranteed by Stripe Connect Escrow · 256-bit encryption
-                    </span>
-                    <span className="text-[10px] text-idle-emerald font-semibold block">
-                      Single-use custody QR code will be generated immediately
-                    </span>
-                  </div>
-                </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setBookingView('review')}
+                    className="gold-gradient-btn w-full py-3 rounded-xl text-xs sm:text-sm font-bold shadow-md cursor-pointer"
+                  >
+                    Leave demo review →
+                  </button>
+                )}
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* STAGE 1: DRAFT (RESERVATION INQUIRY & DATES COORDINATION) */}
-        {currentStage === 'Draft' && (
-          <div className="space-y-4 pt-2">
-            <div className="p-5 rounded-2xl bg-[#f8faf9] border border-idle-line space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-idle-line pb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xs">
-                    1
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-[#172d28]">
-                      Stage 1 of 5 · Initial Draft & Reservation Request
-                    </h3>
-                    <p className="text-[11px] text-idle-muted">
-                      Review schedule window, handoff location, and equipment inclusions before agreement generation
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
-                  Draft Reservation · In Negotiations
-                </span>
-              </div>
+            {/* Pane 2: CONFIRM / NEXT STAGE REVIEW */}
+            {bookingView === 'confirm' && (
+              <div className="space-y-4">
+                <h3 className="booking-subtitle">{nextStageName}</h3>
 
-              {/* Reservation Specs Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                <div className="p-3 bg-white rounded-xl border border-idle-line">
-                  <span className="text-[10px] font-bold text-idle-muted uppercase block">
-                    Requested Schedule
-                  </span>
-                  <strong className="text-xs text-[#172d28] block mt-0.5">
-                    {selectedBooking.dates || `${rentalDays} Days Rental`}
-                  </strong>
-                  <span className="text-[10px] text-idle-muted">Rate: ${dailyRate}/{selectedBooking.unit || 'day'}</span>
-                </div>
-
-                <div className="p-3 bg-white rounded-xl border border-idle-line">
-                  <span className="text-[10px] font-bold text-idle-muted uppercase block">
-                    Preferred Handoff Depot
-                  </span>
-                  <strong className="text-xs text-[#172d28] block mt-0.5">
-                    Frisco North IDLE Depot
-                  </strong>
-                  <span className="text-[10px] text-idle-muted">Verified exchange location</span>
-                </div>
-
-                <div className="p-3 bg-white rounded-xl border border-idle-line">
-                  <span className="text-[10px] font-bold text-idle-muted uppercase block">
-                    Lender Confirmation
-                  </span>
-                  <strong className="text-xs text-emerald-700 block mt-0.5">
-                    {selectedBooking.provider} (Verified)
-                  </strong>
-                  <span className="text-[10px] text-idle-muted">Availability confirmed</span>
-                </div>
-              </div>
-
-              {/* Pre-flight Checklist */}
-              <div className="p-3.5 bg-white rounded-xl border border-idle-line space-y-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#172d28] block">
-                  Draft Preparation Checklist
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[#2b4d44]">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-idle-emerald" />
-                    <span>Lender availability & gear maintenance verified</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-idle-emerald" />
-                    <span>Base rental rate pre-agreed (${itemSubtotal.toFixed(2)})</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-idle-emerald" />
-                    <span>$100.00 standard deposit hold pre-authorized</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Official binding contract ready to generate</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-              <span className="text-xs text-idle-muted">
-                Inquiry details confirmed with {selectedBooking.provider}. Proceed to generate formal digital contract.
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  advanceBookingStage(selectedBooking.id, 'Agreement preview');
-                  setActiveStageTab('Agreement preview');
-                  addToast('Official IDLE rental agreement generated for review.', 'info');
-                }}
-                className="emerald-gradient-btn px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-md flex items-center gap-2 cursor-pointer"
-              >
-                <span>Generate Official Digital Agreement &rarr;</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* STAGE 2: AGREEMENT PREVIEW (BINDING LEGAL CONTRACT & DIGITAL SIGNATURES) */}
-        {currentStage === 'Agreement preview' && (
-          <div className="space-y-4 pt-2">
-            <div className="p-5 rounded-2xl bg-white border border-idle-line shadow-2xs space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-idle-line pb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-idle-emerald text-white flex items-center justify-center font-bold text-xs">
-                    2
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-[#172d28]">
-                      Stage 2 of 5 · Binding Contract & Digital Signatures
-                    </h3>
-                    <p className="text-[11px] text-idle-muted">
-                      Formal legal contract binding custody terms, condition photos, deposit hold, and underwriting
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-50 text-idle-emerald border border-emerald-200">
-                  DOC ID: AGR-IDLE-2026-{selectedBooking.id.replace('BK-', '')}
-                </span>
-              </div>
-
-              {/* Legal Contract Clauses */}
-              <div className="p-4 rounded-xl bg-[#f8faf9] border border-idle-line space-y-2.5 text-xs text-[#2b4c44] leading-relaxed">
-                <div className="font-bold text-[#172d28] border-b border-idle-line/60 pb-1.5 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-idle-emerald" />
-                  <span>Binding Rental & Single-Use QR Custody Agreement Terms</span>
-                </div>
-                <p>
-                  <strong>1. Custody Transfer Protocol:</strong> Physical equipment possession and risk of damage transfer only upon mutual mobile scanning of the single-use dynamic QR code at pickup.
-                </p>
-                <p>
-                  <strong>2. Condition Photo Stamping:</strong> Renter and Lender agree to capture 4 timestamped digital condition photos before equipment release and upon final return.
-                </p>
-                <p>
-                  <strong>3. Pre-Authorized Deposit Hold:</strong> A pre-authorized security deposit hold (${depositHold.toFixed(2)}) is placed on renter's card and automatically released after return inspection.
-                </p>
-                <p>
-                  <strong>4. Tint.ai Underwriting & Arbitration:</strong> Equipment damage, theft, or late returns are resolved through expedited North Texas marketplace arbitration.
-                </p>
-              </div>
-
-              {/* Dual Digital Signature Block */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200 text-xs space-y-1">
-                  <span className="text-[10px] font-bold text-emerald-800 uppercase block">
-                    Lender Digital Signature
-                  </span>
-                  <div className="font-bold text-[#004f46] flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-idle-emerald" />
-                    <span>Signed by {selectedBooking.provider}</span>
-                  </div>
-                  <span className="text-[10px] text-idle-muted block">
-                    IDLE Verified Host · Identity Checked
-                  </span>
-                </div>
-
-                <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200 text-xs space-y-1">
-                  <span className="text-[10px] font-bold text-amber-900 uppercase block">
-                    Renter Digital Signature
-                  </span>
-                  <div className="font-bold text-amber-900 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-amber-700" />
-                    <span>Signed by {selectedBooking.renterName || 'Alex Morgan'}</span>
-                  </div>
-                  <span className="text-[10px] text-idle-muted block">
-                    Pending final payment authorization
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-              <span className="text-xs text-idle-muted">
-                Contract signed by both parties. Ready for payment, protection plan selection, and escrow hold.
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  advanceBookingStage(selectedBooking.id, 'Payment review');
-                  setActiveStageTab('Payment review');
-                  addToast('Agreement accepted! Proceeding to Payment & Protection Plan review.', 'success');
-                }}
-                className="gold-gradient-btn px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-md flex items-center gap-2 cursor-pointer"
-              >
-                <span>Sign Agreement & Proceed to Payment &rarr;</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* STAGE 4: HANDOFF PREVIEW (QR CODE & PICKUP INSPECTION) */}
-        {currentStage === 'Handoff preview' && (
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pt-2">
-            {/* Left: Dynamic QR Code Box */}
-            <div className="md:col-span-5 bg-[#f4f9f6] p-5 rounded-2xl border border-idle-line flex flex-col items-center text-center space-y-3">
-              <div className="p-3 bg-white rounded-2xl shadow-sm border border-idle-line">
-                <div className="w-36 h-36 bg-[#003d36] rounded-xl p-2.5 flex flex-col justify-between">
-                  <div className="flex justify-between">
-                    <div className="w-9 h-9 bg-white rounded-md p-1.5 flex items-center justify-center">
-                      <div className="w-4 h-4 bg-[#003d36] rounded-sm" />
-                    </div>
-                    <div className="w-9 h-9 bg-white rounded-md p-1.5 flex items-center justify-center">
-                      <div className="w-4 h-4 bg-[#003d36] rounded-sm" />
-                    </div>
-                  </div>
-                  <div className="flex justify-center items-center">
-                    <QrCode className="w-10 h-10 text-idle-gold stroke-[2]" />
-                  </div>
-                  <div className="flex justify-between items-end">
-                    <div className="w-9 h-9 bg-white rounded-md p-1.5 flex items-center justify-center">
-                      <div className="w-4 h-4 bg-[#003d36] rounded-sm" />
-                    </div>
-                    <span className="text-[8px] font-mono font-bold text-idle-gold">IDLE</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <strong className="text-xs font-bold text-[#172d28] block">Single-Use Handoff Token</strong>
-                <span className="text-[10px] font-mono text-idle-muted">{selectedBooking.qrToken}</span>
-              </div>
-              <p className="text-[11px] text-idle-muted max-w-xs">
-                Scan with mobile camera when meeting lender in person to record custody transfer.
-              </p>
-
-              {protectionPlanOn && (
-                <div className="w-full p-2.5 rounded-xl bg-amber-50 border border-idle-gold/40 text-left text-xs space-y-0.5">
-                  <span className="text-[10px] font-bold text-[#855f10] uppercase flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-idle-gold" />
-                    <span>Tint.ai Policy Bound & Active</span>
-                  </span>
-                  <span className="text-[11px] font-mono text-idle-muted block">Policy ID: {policyId}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Right: Security Details & Action Stepper */}
-            <div className="md:col-span-7 flex flex-col justify-between space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-xs text-idle-emerald font-bold">
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>Stripe Deposit Pre-Authorization Active (${depositHold.toFixed(2)} hold)</span>
-                </div>
-
-                <div className="p-4 rounded-xl bg-white border border-idle-line space-y-1.5 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-idle-muted">Rental Fee ({rentalDays} days):</span>
-                    <strong className="text-[#172d28]">${itemSubtotal.toFixed(2)}</strong>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-idle-muted">IDLE Service Fee (2.5%):</span>
-                    <strong className="text-[#172d28]">${idleCommission.toFixed(2)}</strong>
-                  </div>
-                  {protectionPlanOn && (
-                    <div className="flex justify-between text-idle-emerald">
-                      <span>Tint.ai Protection Premium:</span>
-                      <strong>${insurancePremium.toFixed(2)}</strong>
-                    </div>
-                  )}
-                  <div className="h-px bg-idle-line my-1" />
-                  <div className="flex justify-between text-xs font-bold">
-                    <span>Amount Charged to Card:</span>
-                    <span className="text-[#004f46]">${totalAmountDue.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-[11px] text-amber-700 font-semibold">
-                    <span>Card Pre-Auth Hold (Deposit):</span>
-                    <span>${depositHold.toFixed(2)}</span>
-                  </div>
-                </div>
-
-                {/* Audit Timeline */}
-                <div>
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-idle-muted mb-2">
-                    Audit Log History
-                  </h4>
-                  <div className="space-y-1.5 text-xs max-h-36 overflow-y-auto pr-1">
-                    {selectedBooking.statusHistory?.map((h, idx) => (
-                      <div key={idx} className="flex items-center gap-2 text-idle-muted">
-                        <Clock className="w-3.5 h-3.5 text-idle-emerald flex-shrink-0" />
-                        <span className="text-[#1e3b33] font-medium">{h.message}</span>
-                        <span className="text-[10px] text-idle-muted/70">({h.time})</span>
+                {/* Stage 0 -> 1: Proposed Date & Time */}
+                {currentStageIndex === 0 && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-bold text-[#0e2e28] block mb-1">Proposed date</label>
+                        <input
+                          type="date"
+                          value={proposedDate}
+                          onChange={(e) => setProposedDate(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#cadbd2] rounded-xl text-xs outline-none focus:border-idle-emerald"
+                          required
+                        />
                       </div>
-                    ))}
+                      <div>
+                        <label className="text-xs font-bold text-[#0e2e28] block mb-1">Proposed time</label>
+                        <input
+                          type="time"
+                          value={proposedTime}
+                          onChange={(e) => setProposedTime(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#cadbd2] rounded-xl text-xs outline-none focus:border-idle-emerald"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-[#60766a] leading-relaxed">
+                      Preview parties: <strong>Alex Morgan</strong> and <strong>{modalBooking.provider || 'Provider'}</strong>. Item or service: <strong>{modalBooking.listingTitle || modalBooking.title}</strong>. The next step creates a versioned example agreement snapshot.
+                    </p>
                   </div>
+                )}
+
+                {/* Stage 1 -> 2: Example Agreement Snapshot */}
+                {currentStageIndex === 1 && (
+                  <div className="contract-sheet">
+                    <strong>Example agreement • Version 1</strong>
+                    <p><b>Parties:</b> Alex Morgan / {modalBooking.provider || 'Provider'}</p>
+                    <p><b>Scope:</b> {modalBooking.listingTitle || modalBooking.title}</p>
+                    <p><b>Price:</b> ${modalBooking.price} per {modalBooking.unit || 'day'}</p>
+                    <p><b>Date:</b> {proposedDate || modalBooking.dates || '10/31/2026'} {proposedTime}</p>
+                    <p><b>Cancellation and condition terms:</b> Must be accepted from actual final terms when implemented.</p>
+                  </div>
+                )}
+
+                {/* Stage 2 -> 3: Payment Review WITH PRESERVED 3RD PARTY INSURANCE TOGGLE */}
+                {currentStageIndex === 2 && (
+                  <div className="contract-sheet space-y-1">
+                    <strong>Payment review • example only</strong>
+                    <div className="receipt-row">
+                      <span>Listed base price</span>
+                      <b>${modalBooking.price}</b>
+                    </div>
+                    <div className="receipt-row">
+                      <span>Security authorization</span>
+                      <b>${depositHold} hold (pre-auth)</b>
+                    </div>
+                    <div className="receipt-row">
+                      <span>Platform processing costs</span>
+                      <b>${idleFee.toFixed(2)} (2.5% fee)</b>
+                    </div>
+
+                    {/* 3RD PARTY TINT.AI INSURANCE TOGGLE (Hidden per user request, preserved intact) */}
+                    {false && (
+                      <>
+                        <div className="receipt-row py-3">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-[#004f46]">Tint.ai 3rd-Party Damage Protection</span>
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300/60">
+                                Optional Policy
+                              </span>
+                            </div>
+                            <small className="text-idle-muted text-[11px] block mt-0.5">
+                              $12.50/day comprehensive equipment damage protection · Micro-Policy: {policyId}
+                            </small>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={protectionPlanOn}
+                              onChange={(e) => setProtectionPlanOn(e.target.checked)}
+                              className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#004f46]"></div>
+                          </label>
+                        </div>
+
+                        {protectionPlanOn && (
+                          <div className="bg-amber-50/60 p-2.5 rounded-xl border border-amber-200/60">
+                            <span className="text-amber-900 font-bold">
+                              Insurance Premium ({rentalDays} {rentalDays === 1 ? 'day' : 'days'} @ $12.50/day):
+                            </span>
+                            <b className="text-amber-900">+${insurancePremium.toFixed(2)}</b>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    <div className="receipt-row pt-2 text-sm font-extrabold border-t-2 border-[#004f46]">
+                      <span>Actual amount charged</span>
+                      <span className="text-lg text-[#004f46]">${totalAmountDue.toFixed(2)}</span>
+                    </div>
+                    <p className="text-[11px] text-[#718278] pt-2">
+                      Deposit holds are neither guaranteed nor escrow. A production checkout requires explicit payer authorization and actual processor confirmation.
+                    </p>
+                  </div>
+                )}
+
+                {/* Stage 3 -> 4: Handoff Preview */}
+                {currentStageIndex === 3 && (
+                  <div className="contract-sheet space-y-3">
+                    <strong>Handoff / completion preview</strong>
+                    <div className="handoff-token">
+                      {modalBooking.qrToken || `IDLE-DEMO-${String(modalBooking.id).slice(-6)}`}
+                    </div>
+                    <p className="text-xs text-[#526a5d]">
+                      This is a reference token, not a real QR credential. To confirm a real handoff, both parties must record custody and condition, supported by actual authenticated events.
+                    </p>
+                    <div>
+                      <label className="text-xs font-bold text-[#0e2e28] block mb-1">
+                        Item condition or job completion notes
+                      </label>
+                      <textarea
+                        value={conditionNotes}
+                        onChange={(e) => setConditionNotes(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#cadbd2] rounded-xl text-xs outline-none focus:border-idle-emerald min-h-[70px]"
+                        placeholder="Describe pickup, handoff or completed work"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-[#0e2e28] block mb-1">
+                        Optional evidence photo (small local demo)
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="text-xs text-idle-muted file:mr-2 file:py-1 file:px-3 file:rounded-xl file:border file:border-[#cadbd2] file:text-xs file:font-semibold file:bg-white hover:file:bg-gray-50 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Demonstration acknowledgement */}
+                <label className="flex items-start gap-2.5 text-xs text-[#2b4b3e] cursor-pointer pt-1">
+                  <input
+                    type="checkbox"
+                    checked={hasAcknowledged}
+                    onChange={(e) => setHasAcknowledged(e.target.checked)}
+                    className="mt-0.5 rounded text-idle-emerald focus:ring-idle-emerald cursor-pointer"
+                    required
+                  />
+                  <span>I understand this is a demonstration; no agreement, charge, handoff or provider confirmation occurs.</span>
+                </label>
+
+                {/* Action buttons */}
+                <div className="flex items-center gap-2 pt-2">
+                  <button
+                    type="button"
+                    disabled={!hasAcknowledged}
+                    onClick={handleAdvanceStage}
+                    className="gold-gradient-btn px-5 py-2.5 rounded-xl text-xs font-bold shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Record demo step →
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBookingView('timeline')}
+                    className="px-4 py-2.5 rounded-xl border border-[#cadbd2] text-[#004f46] hover:bg-gray-50 font-bold text-xs cursor-pointer"
+                  >
+                    Back
+                  </button>
                 </div>
               </div>
+            )}
 
-              {/* Advance Stage to Completed */}
-              <div className="pt-3 border-t border-idle-line flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    advanceBookingStage(selectedBooking.id, 'Completed');
-                    setActiveStageTab('Completed');
-                    addToast('Rental completed! Single-use QR verified and deposit hold released.', 'success');
-                  }}
-                  className="emerald-gradient-btn px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-md flex items-center gap-2 cursor-pointer"
-                >
-                  <span>Confirm Return & Release Deposit Hold &rarr;</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* STAGE 5: COMPLETED */}
-        {currentStage === 'Completed' && (
-          <div className="p-6 rounded-2xl bg-emerald-50/60 border border-idle-emerald/30 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-idle-emerald text-white flex items-center justify-center">
-                <CheckCircle2 className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-serif text-lg font-bold text-[#0d2e29]">
-                  Transaction Completed & Custody Released
-                </h3>
-                <p className="text-xs text-[#2b4c44]">
-                  Equipment returned in full working order. The pre-authorized ${depositHold.toFixed(2)} security deposit hold has been released back to your card.
+            {/* Pane 3: EXTENSION / REQUEST A CHANGE */}
+            {bookingView === 'extension' && (
+              <form onSubmit={handleSaveChange} className="space-y-4">
+                <h3 className="booking-subtitle">Propose a change</h3>
+                <p className="text-xs text-[#60766a]">
+                  Extensions and changes must be re-approved by the parties. This form saves a local request only.
                 </p>
-              </div>
-            </div>
+                <div>
+                  <label className="text-xs font-bold text-[#0e2e28] block mb-1">Requested modification</label>
+                  <textarea
+                    value={changeRequest}
+                    onChange={(e) => setChangeRequest(e.target.value)}
+                    className="w-full px-3 py-2 border border-[#cadbd2] rounded-xl text-xs outline-none focus:border-idle-emerald min-h-[90px]"
+                    placeholder="Extend through Friday, change pickup place, update scope…"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="gold-gradient-btn px-5 py-2.5 rounded-xl text-xs font-bold shadow-md cursor-pointer"
+                >
+                  Save proposed change
+                </button>
+              </form>
+            )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
-              <div className="p-3 bg-white rounded-xl border border-idle-line">
-                <span className="text-[10px] text-idle-muted block font-bold uppercase">Lender Payout</span>
-                <strong className="text-sm font-bold text-[#004f46]">${lenderPayout.toFixed(2)}</strong>
-                <span className="text-[10px] text-idle-muted block">Direct Stripe Connect transfer</span>
-              </div>
-              <div className="p-3 bg-white rounded-xl border border-idle-line">
-                <span className="text-[10px] text-idle-muted block font-bold uppercase">IDLE Commission</span>
-                <strong className="text-sm font-bold text-[#172d28]">${idleCommission.toFixed(2)}</strong>
-                <span className="text-[10px] text-idle-muted block">2.5% platform fee settled</span>
-              </div>
-              <div className="p-3 bg-white rounded-xl border border-idle-line">
-                <span className="text-[10px] text-idle-muted block font-bold uppercase">Deposit Status</span>
-                <strong className="text-sm font-bold text-emerald-600">Released</strong>
-                <span className="text-[10px] text-idle-muted block">$0 deducted (no damages)</span>
-              </div>
-            </div>
+            {/* Pane 4: REPORT ISSUE */}
+            {bookingView === 'issue' && (
+              <form onSubmit={handleSaveIssue} className="space-y-4">
+                <h3 className="booking-subtitle">Create an issue record</h3>
+                <p className="text-xs text-[#60766a]">
+                  Describe the concern and proposed remedy. IDLE documents communications; independent mediators or arbitrators act under their own agreements.
+                </p>
+                <div>
+                  <label className="text-xs font-bold text-[#0e2e28] block mb-1">Preferred path</label>
+                  <select
+                    value={issuePath}
+                    onChange={(e) => setIssuePath(e.target.value)}
+                    className="w-full px-3 py-2 border border-[#cadbd2] rounded-xl text-xs outline-none focus:border-idle-emerald"
+                  >
+                    <option value="Direct negotiation">Discuss with the other party</option>
+                    <option value="Independent referral inquiry">Explore independent remote mediation / arbitration</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[#0e2e28] block mb-1">What happened?</label>
+                  <textarea
+                    value={issueText}
+                    onChange={(e) => setIssueText(e.target.value)}
+                    className="w-full px-3 py-2 border border-[#cadbd2] rounded-xl text-xs outline-none focus:border-idle-emerald min-h-[80px]"
+                    placeholder="Describe the disputed facts and relevant evidence"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[#0e2e28] block mb-1">Requested resolution</label>
+                  <input
+                    type="text"
+                    value={issueRemedy}
+                    onChange={(e) => setIssueRemedy(e.target.value)}
+                    className="w-full px-3 py-2 border border-[#cadbd2] rounded-xl text-xs outline-none focus:border-idle-emerald"
+                    placeholder="Return item, propose refund, repair costs…"
+                    required
+                  />
+                </div>
+                <label className="flex items-start gap-2.5 text-xs text-[#2b4b3e] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    required
+                    className="mt-0.5 rounded text-idle-emerald focus:ring-idle-emerald cursor-pointer"
+                  />
+                  <span>I understand this does not automatically contact another party, freeze money or send evidence to a third party.</span>
+                </label>
+                <button
+                  type="submit"
+                  className="gold-gradient-btn px-5 py-2.5 rounded-xl text-xs font-bold shadow-md cursor-pointer"
+                >
+                  Save issue record
+                </button>
+
+                {cases.filter(c => c.bookingId === modalBooking.id).map((c, i) => (
+                  <div key={i} className="subtle-box">
+                    <strong>{c.path}</strong> · {c.status}
+                    <p className="text-xs mt-1">{c.description}</p>
+                    <small className="text-idle-muted block mt-1">Requested: {c.remedy}</small>
+                  </div>
+                ))}
+              </form>
+            )}
+
+            {/* Pane 5: LEAVE REVIEW */}
+            {bookingView === 'review' && (
+              <form onSubmit={handleSaveReview} className="space-y-4">
+                <h3 className="booking-subtitle">Review your experience</h3>
+                {currentStageIndex !== 4 ? (
+                  <p className="text-xs text-[#60766a]">
+                    Reviews become eligible after the completion stage.
+                  </p>
+                ) : (
+                  <>
+                    <div>
+                      <label className="text-xs font-bold text-[#0e2e28] block mb-1">Your rating</label>
+                      <select
+                        value={reviewRating}
+                        onChange={(e) => setReviewRating(Number(e.target.value))}
+                        className="w-full px-3 py-2 border border-[#cadbd2] rounded-xl text-xs outline-none focus:border-idle-emerald"
+                      >
+                        <option value={5}>5 stars</option>
+                        <option value={4}>4 stars</option>
+                        <option value={3}>3 stars</option>
+                        <option value={2}>2 stars</option>
+                        <option value={1}>1 star</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-[#0e2e28] block mb-1">Review text</label>
+                      <textarea
+                        value={reviewText}
+                        onChange={(e) => setReviewText(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#cadbd2] rounded-xl text-xs outline-none focus:border-idle-emerald min-h-[80px]"
+                        placeholder="How did the rental or service go?"
+                        required
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="gold-gradient-btn px-5 py-2.5 rounded-xl text-xs font-bold shadow-md cursor-pointer"
+                    >
+                      Save demo review
+                    </button>
+                  </>
+                )}
+
+                {reviews.filter(r => r.bookingId === modalBooking.id).map((r, i) => (
+                  <div key={i} className="subtle-box">
+                    ★ {r.rating}/5 · {r.text}
+                  </div>
+                ))}
+              </form>
+            )}
           </div>
-        )}
-      </div>
-
-      {/* Transaction Features Overview */}
-      <section className="glass-card p-6 rounded-3xl border border-idle-line space-y-2">
-        <h3 className="font-serif text-base font-bold text-[#0d2e29] flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-idle-emerald" />
-          <span>What an IDLE Transaction Protects</span>
-        </h3>
-        <p className="text-xs text-idle-muted leading-relaxed">
-          Binding digital rental agreements, Stripe credit card pre-authorizations, condition photos uploaded prior to release, timestamped dynamic QR custody handoffs, automated deposit refunds, and independent arbitration escalation if items are returned damaged.
-        </p>
-      </section>
+        </div>
+      )}
     </div>
   );
 };

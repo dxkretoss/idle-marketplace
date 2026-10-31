@@ -102,7 +102,7 @@ export const ContactView = () => {
             </div>
             <h3 className="font-serif text-base font-bold text-[#003830]">Support & Verification</h3>
             <p className="text-xs text-idle-muted leading-relaxed">
-              Listing approvals, Trade membership questions, and Stripe Connect payout support.
+              Listing approvals, Studio membership questions, and Stripe Connect payout support.
             </p>
           </div>
           <div className="pt-2 border-t border-idle-line">
@@ -209,7 +209,7 @@ export const ContactView = () => {
                     <option value="booking">Active Booking & QR Handoff</option>
                     <option value="listing">Listing & Condition Photo Verification</option>
                     <option value="payouts">Stripe Connect & Payouts</option>
-                    <option value="membership">Trade / Business Membership Plan</option>
+                    <option value="membership">Studio / Business Membership Plan</option>
                     <option value="enterprise">Enterprise Fleet & Team Workspace</option>
                     <option value="safety">Trust, Security & Damage Guarantee</option>
                     <option value="general">General Feedback or Question</option>
@@ -296,7 +296,7 @@ export const ContactView = () => {
                   <span>Zero-Commission Policy</span>
                 </h4>
                 <p className="text-[11px] text-[#294c44]">
-                  IDLE never takes 15-30% cuts like other rental platforms. Members keep 100% of their earnings with flat $15/mo Trade memberships.
+                  IDLE never takes 15-30% cuts like other rental platforms. Members keep 100% of their earnings with flat Studio memberships ($29/mo).
                 </p>
               </div>
 

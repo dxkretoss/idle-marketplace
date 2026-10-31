@@ -68,6 +68,7 @@ const MainContent = () => {
         return <PrivacyView />;
       case 'terms':
         return <TermsView />;
+      case 'elitepm':
       case 'elite-pm':
         return <ElitePmView />;
       case 'owner':
@@ -97,19 +98,21 @@ const MainContent = () => {
     );
   }
 
+  const isEliteRoute = route === 'elitepm' || route === 'elite-pm';
+
   return (
-    <div className="min-h-screen bg-[#f8faf8] text-[#172d28] w-full">
+    <div className={`min-h-screen ${isEliteRoute ? 'bg-[#0d1110]' : 'bg-[#f8faf8]'} text-[#172d28] w-full`}>
       {/* Full-width responsive dashboard shell */}
-      <div className="w-full min-h-screen flex flex-col md:flex-row relative bg-[#f8faf8]">
+      <div className={`w-full min-h-screen flex flex-col md:flex-row relative ${isEliteRoute ? 'bg-[#0d1110]' : 'bg-[#f8faf8]'}`}>
         {/* Sticky Emerald Desktop Sidebar flush to left edge */}
         <SidebarNav />
 
         {/* Main Content Area filling remaining width */}
-        <div className="flex-1 flex flex-col min-w-0 w-full">
+        <div className={`flex-1 flex flex-col min-w-0 w-full ${isEliteRoute ? 'bg-[#0d1110]' : ''}`}>
           <Topbar />
 
           {/* View Container */}
-          <main className="flex-1 p-4 sm:p-6 md:p-8 pb-0 sm:pb-0 md:pb-0 w-full min-w-0">
+          <main className={`flex-1 w-full min-w-0 ${isEliteRoute ? 'p-0 bg-[#0d1110]' : 'p-4 sm:p-6 md:p-8 pb-0 sm:pb-0 md:pb-0'}`}>
             {renderCurrentView()}
           </main>
         </div>

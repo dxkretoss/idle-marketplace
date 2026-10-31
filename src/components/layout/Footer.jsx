@@ -202,9 +202,17 @@ export const Footer = () => {
               <li>
                 <button
                   onClick={() => setRoute('membership')}
+                  className="hover:text-idle-gold transition-colors text-left cursor-pointer"
+                >
+                  Studio ($29/mo)
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => setRoute('membership')}
                   className="hover:text-idle-gold transition-colors text-left flex items-center gap-1.5 text-idle-gold font-bold cursor-pointer"
                 >
-                  <span>Trade Member ($15/mo)</span>
+                  <span>Studio Pro ($59/mo)</span>
                   <span className="text-[9px] bg-idle-gold/20 px-1.5 py-0.2 rounded border border-idle-gold/40">Popular</span>
                 </button>
               </li>
@@ -213,7 +221,7 @@ export const Footer = () => {
                   onClick={() => setRoute('membership')}
                   className="hover:text-idle-gold transition-colors text-left cursor-pointer"
                 >
-                  Business Fleet ($29/mo)
+                  Business ($149/mo)
                 </button>
               </li>
               <li>
@@ -222,7 +230,7 @@ export const Footer = () => {
                   onClick={() => setRoute('enterprise')}
                   className="hover:text-idle-gold transition-colors text-left block cursor-pointer"
                 >
-                  Enterprise Workspaces
+                  Enterprise Workspaces ($399/mo)
                 </button>
               </li>
               <li>

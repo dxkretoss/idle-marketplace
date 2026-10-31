@@ -101,7 +101,7 @@ export const TermsView = () => {
         <div className="space-y-2">
           <h3 className="font-serif text-lg font-bold text-[#003830]">4. Zero Commission & Subscriptions</h3>
           <p>
-            IDLE charges zero percent (0%) marketplace commissions on equipment rentals and pro services. Members subscribe to tiered memberships (Free Member with standard limits, Trade Member at $15/month for unlimited listings, and Business Fleet at $29/month). Subscription fees are billed monthly through Stripe and may be cancelled at any time before the next billing cycle.
+            IDLE charges zero percent (0%) marketplace commissions on equipment rentals and pro services. Members subscribe to tiered memberships (Free Member with standard limits, Studio at $29/month, Studio Pro at $59/month, Business at $149/month, and Enterprise at $399/month). Subscription fees are billed monthly through Stripe and may be cancelled at any time before the next billing cycle.
           </p>
         </div>
 

@@ -47,14 +47,16 @@ export const ADMIN_NAV_GROUPS = [
     ['subscriptions', 'Subscriptions', '◈']
   ]],
   ['PRIVATE & CONTENT', [
-    ['elite', 'Elite PM', '♛'],
+    // Hidden per user request (kept intact for easy re-enabling)
+    ['elite', 'Elite PM', '♛', { hidden: true }],
     ['reels', 'Reels & Safety', '▶']
   ]],
   ['YOUR TEAM', [
     ['teams', 'Team workspace', '♧'],
     ['ai', 'AI Help Desk', '✦'],
     ['automations', 'Automations', '⚙'],
-    ['resources', 'Resources', '☷'],
+    // Hidden per user request (kept intact for easy re-enabling)
+    ['resources', 'Resources', '☷', { hidden: true }],
     ['audit', 'Audit history', '▤']
   ]]
 ];
@@ -273,6 +275,13 @@ export const AdminProvider = ({ children }) => {
       return 'Super Admin';
     }
   });
+  const [adminEmail, setAdminEmail] = useState(() => {
+    try {
+      return localStorage.getItem('idle_admin_email') || 'admin@idle.market';
+    } catch {
+      return 'admin@idle.market';
+    }
+  });
   const [activeView, setActiveViewState] = useState('overview');
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     try {
@@ -298,6 +307,12 @@ export const AdminProvider = ({ children }) => {
         localStorage.setItem('idle_admin_active_role', chosenRole);
       } catch {}
     }
+
+    const emailToSet = username?.trim() || 'admin@idle.market';
+    setAdminEmail(emailToSet);
+    try {
+      localStorage.setItem('idle_admin_email', emailToSet);
+    } catch {}
 
     setIsLoggedIn(true);
     try {
@@ -456,6 +471,8 @@ export const AdminProvider = ({ children }) => {
     <AdminContext.Provider value={{
       role,
       setRole,
+      adminEmail,
+      setAdminEmail,
       activeView,
       setActiveView,
       can,

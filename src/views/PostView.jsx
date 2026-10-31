@@ -1,20 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import { CATEGORIES } from '../data/mockData';
 import { 
-  PlusCircle, 
-  Trash2, 
-  ShieldCheck, 
-  Info, 
   Sparkles,
-  CheckCircle2,
-  Calendar,
-  DollarSign,
-  Upload,
   Check,
-  Image as ImageIcon
+  X,
+  Upload,
+  PlusCircle,
+  Eye,
+  Archive,
+  RotateCcw,
+  Trash2
 } from 'lucide-react';
-
 import { AuthGate } from '../components/common/AuthGate';
 
 const PRESET_IMAGES = [
@@ -26,46 +22,77 @@ const PRESET_IMAGES = [
   'https://images.unsplash.com/photo-1746730921429-3a6489172f1b?auto=format&fit=crop&w=800&q=80'
 ];
 
+const CATEGORY_OPTIONS = [
+  { value: 'Tools', label: 'Tools & equipment' },
+  { value: 'Vehicles', label: 'Vehicles' },
+  { value: 'Outdoor', label: 'Outdoor & adventure' },
+  { value: 'Home', label: 'Home & living' },
+  { value: 'Tech', label: 'Tech & media' },
+  { value: 'Workers', label: 'Local workers' },
+  { value: 'Fashion', label: 'Fashion & style' },
+  { value: 'Events', label: 'Events & experiences' },
+  { value: 'Enterprise', label: 'Business & enterprise' }
+];
+
 export const PostView = () => {
   const { 
     addListing, 
+    updateListing,
     listings, 
     removeListing, 
     user, 
     plan, 
+    ownerRole,
     setRoute,
+    setActiveListing,
+    reels,
     isAuthenticated,
     addToast
   } = useApp();
 
-  const [kind, setKind] = useState('rental'); // 'request' | 'rental' | 'service' | 'business'
+  // Form states matching docs/IDLE_Full_Marketplace_Elite_PM_Admin_Console (2).html#post
+  const [kind, setKind] = useState('service'); // 'service' | 'rental' | 'request' | 'business'
   const [category, setCategory] = useState('Tools');
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('75');
-  const [unit, setUnit] = useState('day');
-  const [area, setArea] = useState('Frisco, TX');
+  const [area, setArea] = useState(user?.area?.split(',')[0] || 'Frisco');
   const [date, setDate] = useState('');
   const [description, setDescription] = useState('');
   const [selectedImage, setSelectedImage] = useState(PRESET_IMAGES[0]);
   const [permission, setPermission] = useState(false);
+  const [editingListingId, setEditingListingId] = useState(null);
+
   const fileInputRef = useRef(null);
 
-  // Auth gate check: must be logged in to create listings
+  // Auth gate check: must be logged in to access posting
   if (!isAuthenticated) {
     return (
       <AuthGate
-        badge="Post an Opportunity"
-        title="Sign in to create a listing on IDLE"
-        subtitle="You must be signed in to list unused tools, equipment, and professional trade skills."
+        badge="YOUR STUDIO / CREATE & MANAGE"
+        title="Put your skills and things to work."
+        subtitle="Post service offerings, rental items, task requests and company inventory, then edit or archive what you have published in this owner demo."
         actionText="Sign In to Post"
       />
     );
   }
 
-  // Filter listings created by the current user
-  const userListings = listings.filter(l => l.owner === user.name);
+  // Check paid entitlement: Free accounts see the Studio upgrade box
+  const isPaid = plan && plan !== 'Free';
+  const canManageOrg = plan === 'Business' || plan === 'Enterprise' || plan === 'Studio Pro' || ownerRole === 'enterprise';
 
-  // Handle uploading image from device
+  // Current user's listings
+  const userListings = useMemo(() => {
+    return listings.filter(l => l.owner === user.name || l.author === user.name || l.ownerVerified);
+  }, [listings, user.name]);
+
+  // Usage stats calculations
+  const activeServices = userListings.filter(l => (l.type === 'service' || l.type === 'request' || l.kind === 'service' || l.kind === 'request') && l.status !== 'archived').length;
+  const activeRentals = userListings.filter(l => (l.type === 'rental' || l.kind === 'rental' || (!l.type && !l.kind)) && l.status !== 'archived').length;
+  const activeCount = userListings.filter(l => l.status !== 'archived').length;
+  const archivedCount = userListings.filter(l => l.status === 'archived').length;
+  const userReelsCount = reels?.filter(r => r.author === user?.name || r.owner === user?.name).length || 0;
+
+  // Handle uploading custom image from device
   const handleImageFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -83,12 +110,85 @@ export const PostView = () => {
     const reader = new FileReader();
     reader.onload = (event) => {
       setSelectedImage(event.target.result);
-      addToast('Photo uploaded from your device!', 'success');
+      addToast('Photo loaded successfully!', 'success');
     };
     reader.onerror = () => {
       addToast('Failed to load image file', 'error');
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleToggleArchive = (id) => {
+    const item = listings.find(l => l.id === id);
+    if (!item) return;
+    const nextStatus = item.status === 'archived' ? 'active' : 'archived';
+    if (updateListing) {
+      updateListing(id, { status: nextStatus });
+      addToast(nextStatus === 'archived' ? 'Listing moved to archive' : 'Listing restored to active', 'info');
+    }
+  };
+
+  const handleEditListing = (item) => {
+    setEditingListingId(item.id);
+    setTitle(item.title || '');
+    setPrice(item.price ? String(item.price) : '75');
+    setArea(item.area || 'Frisco');
+    setDate(item.date || '');
+    setDescription(item.desc || item.description || '');
+    setSelectedImage(item.image || PRESET_IMAGES[0]);
+    setCategory(item.category || 'Tools');
+    setKind(item.type || item.kind || 'service');
+
+    const formEl = document.getElementById('create-listing');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
+    addToast('Editing listing: ' + item.title, 'info');
+  };
+
+  const handleSeedDemoInventory = () => {
+    const samples = [
+      {
+        title: 'Compact Excavator Rental',
+        category: 'Tools',
+        price: 250,
+        unit: 'day',
+        deposit: 500,
+        area: 'Frisco',
+        image: 'https://images.unsplash.com/photo-1610477865545-37711c53144d?auto=format&fit=crop&w=800&q=80',
+        type: 'rental',
+        tag: 'Rental Gear',
+        desc: 'Reliable diesel digger with trailer, perfect for trenching, foundation prep and residential grading.',
+        status: 'active'
+      },
+      {
+        title: 'Sony FX6 Cinema Camera Rig',
+        category: 'Tech',
+        price: 90,
+        unit: 'day',
+        deposit: 1500,
+        area: 'Frisco',
+        image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80',
+        type: 'rental',
+        tag: 'Cinema Gear',
+        desc: 'Full cinematic production kit with 24-70mm GM lens, V-mount power station and wireless audio.',
+        status: 'active'
+      },
+      {
+        title: 'Enterprise Project Staffing',
+        category: 'Enterprise',
+        price: 420,
+        unit: 'day',
+        deposit: 1000,
+        area: 'Plano',
+        image: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=800&q=80',
+        type: 'service',
+        tag: 'Enterprise Staffing',
+        desc: 'Dedicated on-site logistics crew and certified machinery handlers for multi-day infrastructure setups.',
+        status: 'active'
+      }
+    ];
+
+    samples.forEach(s => addListing(s));
+    addToast('Loaded 3 example Studio listings into your inventory!', 'success');
   };
 
   const handleSubmit = (e) => {
@@ -98,355 +198,478 @@ export const PostView = () => {
       setRoute('auth');
       return;
     }
-    if (!permission) return;
 
-    addListing({
-      title,
-      category,
-      price: Number(price),
-      unit: kind === 'request' ? 'budget' : unit,
-      deposit: kind === 'rental' ? Math.round(Number(price) * 1.5) : 0,
-      area,
-      image: selectedImage,
-      type: kind === 'request' ? 'request' : kind === 'service' ? 'service' : 'rental',
-      tag: kind === 'request' ? 'Community Request' : kind === 'service' ? 'Service Offer' : 'Rental Gear',
-      desc: description,
-      date
-    });
+    if (!permission) {
+      addToast('Please confirm your permission to publish.', 'error');
+      return;
+    }
 
-    addToast('Your listing has been published!', 'success');
+    if (editingListingId) {
+      if (updateListing) {
+        updateListing(editingListingId, {
+          title,
+          category,
+          price: Number(price),
+          area,
+          image: selectedImage,
+          type: kind,
+          desc: description,
+          date
+        });
+        addToast('Listing updated successfully!', 'success');
+      }
+      setEditingListingId(null);
+    } else {
+      addListing({
+        title,
+        category,
+        price: Number(price),
+        unit: kind === 'request' ? 'budget' : 'day',
+        deposit: kind === 'rental' ? Math.round(Number(price) * 1.5) : 0,
+        area,
+        image: selectedImage,
+        type: kind,
+        tag: kind === 'request' ? 'Task Request' : kind === 'service' ? 'Service Offer' : 'Rental Item',
+        desc: description,
+        date,
+        status: 'active'
+      });
+      addToast('Listing published demo successfully!', 'success');
+    }
 
-    // Reset form
+    // Reset form fields
     setTitle('');
     setDescription('');
+    setDate('');
     setPermission(false);
   };
 
   return (
-    <div className="space-y-8 pb-16">
-      {/* Page Heading */}
-      <div>
-        <span className="text-[10px] font-bold uppercase tracking-wider text-idle-gold block">
-          Publish Local Opportunity
-        </span>
-        <h1 className="font-serif text-2xl sm:text-4xl font-bold text-[#082f2c] mt-0.5">
-          What would you like to post?
+    <div className="space-y-6 pb-16">
+      {/* Page Heading matching docs/IDLE_Full_Marketplace_Elite_PM_Admin_Console (2).html#post */}
+      <div className="space-y-1">
+        <div className="text-[10px] font-extrabold uppercase tracking-widest text-[#9b782c]">
+          YOUR STUDIO / CREATE & MANAGE
+        </div>
+        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#004f46]">
+          Put your skills and things to work.
         </h1>
-        <p className="text-xs sm:text-sm text-idle-muted mt-1 max-w-xl">
-          Free accounts can publish community requests. Paid Trade, Business, and Enterprise accounts can offer rentals, tools, and professional services.
+        <p className="text-xs sm:text-sm text-[#596e64] max-w-2xl leading-relaxed">
+          Post service offerings, rental items, task requests and company inventory, then edit or archive what you have published in this owner demo.
         </p>
       </div>
 
-      {/* Main Publishing Form Card */}
-      <div className="glass-card p-6 md:p-8 rounded-3xl border border-idle-emerald/20 shadow-glass">
-        <form onSubmit={handleSubmit} className="space-y-5 text-xs sm:text-sm">
-          {/* Post Kind Selector */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#172d28] mb-2">
-              Select Post Type
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-              {[
-                { id: 'request', label: 'Community Request', sub: 'Free for all members', badge: 'Free' },
-                { id: 'rental', label: 'Item / Gear Rental', sub: 'Offer equipment or goods', badge: 'Paid' },
-                { id: 'service', label: 'Skill or Service', sub: 'Offer professional help', badge: 'Paid' },
-                { id: 'business', label: 'Enterprise Listing', sub: 'Team & fleet operations', badge: 'Team' },
-              ].map((t) => (
-                <button
-                  type="button"
-                  key={t.id}
-                  onClick={() => setKind(t.id)}
-                  className={`p-3.5 rounded-2xl border text-left transition-all ${
-                    kind === t.id
-                      ? 'bg-idle-mint/80 border-idle-emerald text-idle-emerald font-bold shadow-sm'
-                      : 'bg-[#fcfdfc] border-idle-line hover:border-idle-emerald/40 text-[#253f37]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-bold">{t.label}</span>
-                    <span className="text-[9px] uppercase px-1.5 py-0.2 rounded bg-white text-idle-emerald font-bold border border-idle-emerald/20">
-                      {t.badge}
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-idle-muted font-normal block">{t.sub}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+      {/* 3 Top Usage Stats Cards (.post-usage) matching Prototype */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="bg-white border border-[#dce8df] rounded-2xl p-4 sm:p-5 flex flex-col gap-1.5 shadow-2xs">
+          <strong className="text-xl sm:text-2xl font-bold text-[#004f46]">
+            {activeServices} / Fair use
+          </strong>
+          <span className="text-xs text-[#6c7c73]">Active service/task posts</span>
+        </div>
 
-          {/* Form Fields Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
-            <div>
-              <label className="block text-xs font-bold text-[#172d28] uppercase tracking-wider mb-1">
-                Category
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-idle-line bg-[#f8faf9] focus:bg-white focus:border-idle-emerald outline-none font-medium"
-              >
-                {CATEGORIES.filter(c => c.id !== 'All').map((cat) => (
-                  <option key={cat.id} value={cat.id}>{cat.label}</option>
-                ))}
-              </select>
-            </div>
+        <div className="bg-white border border-[#dce8df] rounded-2xl p-4 sm:p-5 flex flex-col gap-1.5 shadow-2xs">
+          <strong className="text-xl sm:text-2xl font-bold text-[#004f46]">
+            {activeRentals} / Fair use
+          </strong>
+          <span className="text-xs text-[#6c7c73]">Active rentals</span>
+        </div>
 
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-bold text-[#172d28] uppercase tracking-wider mb-1">
-                Listing Title
-              </label>
-              <input
-                type="text"
-                required
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Sony FX3 Cinema Rig or Compact Excavator"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-idle-line bg-[#f8faf9] focus:bg-white focus:border-idle-emerald outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-[#172d28] uppercase tracking-wider mb-1">
-                {kind === 'request' ? 'Target Budget (USD)' : 'Price (USD)'}
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2.5 text-idle-muted font-bold">$</span>
-                <input
-                  type="number"
-                  required
-                  min="0"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  className="w-full pl-7 pr-3.5 py-2.5 rounded-xl border border-idle-line bg-[#f8faf9] focus:bg-white focus:border-idle-emerald outline-none font-bold"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-[#172d28] uppercase tracking-wider mb-1">
-                Billing Unit
-              </label>
-              <select
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-idle-line bg-[#f8faf9] focus:bg-white focus:border-idle-emerald outline-none"
-              >
-                <option value="day">per day</option>
-                <option value="hour">per hour</option>
-                <option value="weekend">per weekend</option>
-                <option value="session">per session</option>
-                <option value="event">per event</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-[#172d28] uppercase tracking-wider mb-1">
-                Approximate Area
-              </label>
-              <input
-                type="text"
-                required
-                value={area}
-                onChange={(e) => setArea(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-idle-line bg-[#f8faf9] focus:bg-white focus:border-idle-emerald outline-none"
-              />
-            </div>
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-xs font-bold text-[#172d28] uppercase tracking-wider mb-1">
-              Details & Terms
-            </label>
-            <textarea
-              required
-              rows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Provide item specs, operating condition, pickup requirements, or what help is needed..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-idle-line bg-[#f8faf9] focus:bg-white focus:border-idle-emerald outline-none resize-none"
-            />
-          </div>
-
-          {/* Photo Upload & Presets */}
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between">
-              <label className="block text-xs font-bold text-[#172d28] uppercase tracking-wider">
-                Listing Photo
-              </label>
-              <span className="text-[11px] text-idle-muted">Upload your own photo or pick a sample</span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-start">
-              {/* Upload Zone / Active Preview */}
-              <div className="md:col-span-5 relative">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleImageFileChange}
-                  accept="image/*"
-                  className="hidden"
-                />
-
-                <div 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="group relative h-36 rounded-2xl overflow-hidden border-2 border-dashed border-[#c1d5cb] hover:border-idle-emerald bg-[#f6faf8] flex flex-col items-center justify-center p-2.5 cursor-pointer transition-all shadow-xs"
-                >
-                  {selectedImage ? (
-                    <>
-                      <img 
-                        src={selectedImage} 
-                        alt="Selected listing preview" 
-                        className="w-full h-full object-cover rounded-xl"
-                      />
-                      <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-2">
-                        <Upload className="w-5 h-5 mb-1 text-idle-gold" />
-                        <span className="text-xs font-bold">Click to replace photo</span>
-                        <span className="text-[10px] text-emerald-200">PNG, JPG, WEBP up to 10MB</span>
-                      </div>
-                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-bold border border-white/20 flex items-center gap-1">
-                        <Check className="w-3 h-3 text-emerald-400 stroke-[3]" />
-                        <span>Active Photo</span>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-center space-y-1">
-                      <div className="w-9 h-9 rounded-xl bg-idle-mint text-idle-emerald flex items-center justify-center mx-auto">
-                        <Upload className="w-4 h-4" />
-                      </div>
-                      <span className="text-xs font-bold text-[#172d28] block">Upload photo from device</span>
-                      <span className="text-[10px] text-idle-muted block">Click to browse or drop file here</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between mt-1 px-0.5">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="text-[11px] font-bold text-idle-emerald hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <Upload className="w-3 h-3" />
-                    <span>Upload from device</span>
-                  </button>
-                  {selectedImage && (
-                    <span className="text-[10px] text-idle-muted">Photo ready</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Sample Presets Strip */}
-              <div className="md:col-span-7 space-y-1.5">
-                <span className="text-[11px] font-semibold text-idle-muted block">
-                  Or pick a sample marketplace photo:
-                </span>
-                <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                  {PRESET_IMAGES.map((imgUrl, i) => {
-                    const isSelected = selectedImage === imgUrl;
-                    return (
-                      <button
-                        type="button"
-                        key={i}
-                        onClick={() => setSelectedImage(imgUrl)}
-                        className={`h-16 rounded-xl overflow-hidden border-2 transition-all cursor-pointer relative ${
-                          isSelected ? 'border-idle-gold shadow-md scale-102 ring-1 ring-idle-gold' : 'border-transparent opacity-60 hover:opacity-100 hover:scale-102'
-                        }`}
-                        title="Use sample photo"
-                      >
-                        <img src={imgUrl} alt={`Preset ${i}`} className="w-full h-full object-cover" />
-                        {isSelected && (
-                          <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-idle-emerald text-white flex items-center justify-center shadow-xs">
-                            <Check className="w-2 h-2 stroke-[3]" />
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Permission check */}
-          <label className="flex items-start gap-2.5 text-xs text-idle-muted pt-2 cursor-pointer">
-            <input
-              type="checkbox"
-              required
-              checked={permission}
-              onChange={(e) => setPermission(e.target.checked)}
-              className="mt-0.5 rounded text-idle-emerald focus:ring-idle-emerald"
-            />
-            <span>
-              I have the right to post this item or request. I understand IDLE enforces single-use QR custody transfers and member verification.
-            </span>
-          </label>
-
-          {/* Submit Button */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-idle-line">
-            <button
-              type="submit"
-              disabled={!permission}
-              className="gold-gradient-btn w-full sm:w-auto px-8 py-3 rounded-xl text-sm font-bold shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <PlusCircle className="w-4 h-4 stroke-[2.5]" />
-              <span>Publish Listing</span>
-            </button>
-          </div>
-        </form>
+        <div className="bg-white border border-[#dce8df] rounded-2xl p-4 sm:p-5 flex flex-col gap-1.5 shadow-2xs">
+          <strong className="text-xl sm:text-2xl font-bold text-[#004f46]">
+            {userReelsCount} / 12
+          </strong>
+          <span className="text-xs text-[#6c7c73]">Promotional Reels / 24h</span>
+        </div>
       </div>
 
-      {/* Your Active Listings Table */}
-      {userListings.length > 0 && (
-        <section className="space-y-4">
-          <div className="flex items-center justify-between border-b border-idle-line pb-2">
-            <h2 className="font-serif text-xl font-bold text-[#082f2c]">
-              Your Active Listings ({userListings.length})
-            </h2>
-            <span className="text-xs text-idle-muted">Manage or remove created listings</span>
+      {/* Entitlement check: upgrade prompt for Free plan */}
+      {!isPaid ? (
+        <div className="bg-[#f8faf9] border border-[#dce8df] rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-xs">
+          <div className="space-y-1.5">
+            <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#004f46]">
+              Studio unlocks publishing.
+            </h3>
+            <p className="text-xs sm:text-sm text-[#596e64] max-w-xl leading-relaxed">
+              Free accounts can create a profile, view nearby Reels and explore listings. Switch to Studio or higher to create earning listings, post tasks and communicate.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setRoute('membership')}
+            className="gold-gradient-btn px-6 py-3 rounded-xl font-bold text-xs sm:text-sm shadow-md cursor-pointer whitespace-nowrap flex items-center gap-2 hover:brightness-105 transition-transform active:scale-98"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Preview Studio access →</span>
+          </button>
+        </div>
+      ) : (
+        /* Create Listing Form Card (#create-listing) matching Prototype */
+        <div id="create-listing" className="bg-white border border-[#dce8df] rounded-2xl p-6 sm:p-8 space-y-6 shadow-xs">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#f0f4f1] pb-4">
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#9b782c] block">
+                NEW MARKETPLACE LISTING
+              </span>
+              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#004f46]">
+                {editingListingId ? 'Edit your listing' : 'What would you like to post?'}
+              </h2>
+            </div>
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#edf7f3] text-[#004f46] border border-[#cbe4d7] tracking-wider self-start sm:self-auto">
+              LOCAL DEMO
+            </span>
           </div>
 
-          <div className="glass-card rounded-2xl overflow-hidden border border-idle-line">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs md:text-sm">
-                <thead className="bg-[#f4f8f6] text-idle-muted font-bold uppercase text-[10px] tracking-wider border-b border-idle-line">
-                  <tr>
-                    <th className="p-3.5">Listing</th>
-                    <th className="p-3.5">Category</th>
-                    <th className="p-3.5">Price</th>
-                    <th className="p-3.5">Area</th>
-                    <th className="p-3.5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-idle-line">
-                  {userListings.map((p) => (
-                    <tr key={p.id} className="hover:bg-idle-mint/30 transition-colors">
-                      <td className="p-3.5 font-bold text-[#112d26] flex items-center gap-2.5">
-                        <img src={p.image} alt={p.title} className="w-10 h-10 rounded-lg object-cover" />
-                        <div>
-                          <span className="block">{p.title}</span>
-                          <span className="text-[10px] text-idle-emerald font-semibold uppercase">{p.tag}</span>
-                        </div>
-                      </td>
-                      <td className="p-3.5 text-idle-muted">{p.category}</td>
-                      <td className="p-3.5 font-bold text-[#004f46]">${p.price} / {p.unit}</td>
-                      <td className="p-3.5 text-idle-muted">{p.area}</td>
-                      <td className="p-3.5 text-right">
-                        <button
-                          onClick={() => removeListing(p.id)}
-                          className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
-                          title="Remove listing"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
+          <form onSubmit={handleSubmit} className="space-y-5 text-xs">
+            {/* Form Grid matching Prototype */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Field 1: Listing type */}
+              <div className="space-y-1.5">
+                <label htmlFor="post-kind" className="block text-xs font-bold text-[#004f46]">
+                  Listing type
+                </label>
+                <select
+                  id="post-kind"
+                  name="kind"
+                  value={kind}
+                  onChange={(e) => setKind(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#dbe6df] bg-[#fbfcfa] focus:bg-white focus:border-[#004f46] outline-none transition-all text-xs cursor-pointer"
+                >
+                  <option value="service">Offer a service or trade</option>
+                  <option value="rental">Rent out an item</option>
+                  <option value="request">Post a task request</option>
+                  {canManageOrg && <option value="business">Organization listing</option>}
+                </select>
+              </div>
+
+              {/* Field 2: Category */}
+              <div className="space-y-1.5">
+                <label htmlFor="post-category" className="block text-xs font-bold text-[#004f46]">
+                  Category
+                </label>
+                <select
+                  id="post-category"
+                  name="category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#dbe6df] bg-[#fbfcfa] focus:bg-white focus:border-[#004f46] outline-none transition-all text-xs cursor-pointer"
+                >
+                  {CATEGORY_OPTIONS.map((cat) => (
+                    <option key={cat.value} value={cat.value}>{cat.label}</option>
                   ))}
-                </tbody>
-              </table>
+                </select>
+              </div>
+
+              {/* Field 3: Listing title */}
+              <div className="space-y-1.5">
+                <label htmlFor="post-title" className="block text-xs font-bold text-[#004f46]">
+                  Listing title
+                </label>
+                <input
+                  id="post-title"
+                  name="title"
+                  required
+                  maxLength={90}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Weekend camera kit or cabinet installation"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#dbe6df] bg-[#fbfcfa] focus:bg-white focus:border-[#004f46] outline-none transition-all text-xs"
+                />
+              </div>
+
+              {/* Field 4: Asking price / task budget USD */}
+              <div className="space-y-1.5">
+                <label htmlFor="post-price" className="block text-xs font-bold text-[#004f46]">
+                  Asking price / task budget USD
+                </label>
+                <input
+                  id="post-price"
+                  name="price"
+                  type="number"
+                  min="0"
+                  max="999999"
+                  step="0.01"
+                  required
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="75"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#dbe6df] bg-[#fbfcfa] focus:bg-white focus:border-[#004f46] outline-none transition-all text-xs font-semibold"
+                />
+              </div>
+
+              {/* Field 5: Approximate location */}
+              <div className="space-y-1.5">
+                <label htmlFor="post-area" className="block text-xs font-bold text-[#004f46]">
+                  Approximate location
+                </label>
+                <input
+                  id="post-area"
+                  name="area"
+                  required
+                  maxLength={45}
+                  value={area}
+                  onChange={(e) => setArea(e.target.value)}
+                  placeholder="Frisco"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#dbe6df] bg-[#fbfcfa] focus:bg-white focus:border-[#004f46] outline-none transition-all text-xs"
+                />
+              </div>
+
+              {/* Field 6: Available from */}
+              <div className="space-y-1.5">
+                <label htmlFor="post-date" className="block text-xs font-bold text-[#004f46]">
+                  Available from
+                </label>
+                <input
+                  id="post-date"
+                  name="date"
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#dbe6df] bg-[#fbfcfa] focus:bg-white focus:border-[#004f46] outline-none transition-all text-xs cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/* Field 7: Details, condition and scope (full width) */}
+            <div className="space-y-1.5">
+              <label htmlFor="post-description" className="block text-xs font-bold text-[#004f46]">
+                Details, condition and scope
+              </label>
+              <textarea
+                id="post-description"
+                name="description"
+                required
+                minLength={10}
+                maxLength={750}
+                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe the item, skill, task scope, conditions, and anything a customer should know."
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#dbe6df] bg-[#fbfcfa] focus:bg-white focus:border-[#004f46] outline-none transition-all text-xs resize-none"
+              />
+            </div>
+
+            {/* Field 8: Photo (optional) with file upload, preview, and demo presets */}
+            <div className="space-y-2">
+              <label htmlFor="post-photo" className="block text-xs font-bold text-[#004f46]">
+                Photo (optional)
+              </label>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <input
+                  id="post-photo"
+                  name="photo"
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageFileChange}
+                  className="block w-full sm:w-auto text-xs text-[#596e64] file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border file:border-[#dbe6df] file:text-xs file:font-bold file:bg-[#f1f8f2] file:text-[#004f46] hover:file:bg-[#e1f6f1] file:cursor-pointer cursor-pointer"
+                />
+                <small className="text-[11px] text-[#7a8d82]">
+                  A clear photo is compressed to fit browser-only demo storage; it stays on this device.
+                </small>
+              </div>
+
+              {/* Photo preview or preset chooser */}
+              {selectedImage ? (
+                <div className="flex items-center gap-3 pt-2">
+                  <div className="relative w-36 h-24 rounded-xl overflow-hidden border-2 border-[#004f46] shadow-sm bg-black">
+                    <img src={selectedImage} alt="Listing preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setSelectedImage('')}
+                      className="absolute top-1 right-1 bg-black/75 hover:bg-black text-white rounded-full p-1 text-[10px] cursor-pointer"
+                      title="Remove photo"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <div className="text-[11px] text-[#596e64]">
+                    <span className="font-bold text-[#004f46] block">Photo Attached</span>
+                    <span>Ready for marketplace showcase</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="pt-1">
+                  <span className="text-[11px] text-[#7a8d82] block mb-1.5">
+                    Or pick a sample marketplace photo:
+                  </span>
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                    {PRESET_IMAGES.map((imgUrl, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setSelectedImage(imgUrl)}
+                        className="w-16 h-12 rounded-lg overflow-hidden border border-[#dbe6df] hover:border-[#004f46] shrink-0 cursor-pointer transition-transform hover:scale-105"
+                      >
+                        <img src={imgUrl} alt={`Preset ${i}`} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Field 9: Permission Checkbox */}
+            <label className="flex items-start gap-2 pt-1 text-xs text-[#596e64] cursor-pointer select-none">
+              <input
+                type="checkbox"
+                name="permission"
+                required
+                checked={permission}
+                onChange={(e) => setPermission(e.target.checked)}
+                className="mt-0.5 rounded text-[#004f46] focus:ring-[#004f46] cursor-pointer"
+              />
+              <span>
+                I have permission to post this item, service and any identifiable people shown.
+              </span>
+            </label>
+
+            {/* Actions: Button & Note */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+              <button
+                type="submit"
+                disabled={!permission}
+                className="gold-gradient-btn px-6 py-3 rounded-xl font-bold text-xs shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-transform active:scale-98"
+              >
+                <span>{editingListingId ? 'Update listing →' : 'Publish demo listing →'}</span>
+              </button>
+              <span className="text-[11px] text-[#7a8d82]">
+                Local only · No actual customers are notified
+              </span>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Your listings & inventory Section matching Prototype */}
+      <section className="space-y-4 pt-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#dce6df] pb-3">
+          <div>
+            <h2 className="font-serif text-2xl font-bold text-[#004f46]">
+              Your listings & inventory
+            </h2>
+            <p className="text-xs text-[#718278]">
+              {activeCount} active · {archivedCount} archived · sorted newest first
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setRoute('explore')}
+            className="px-4 py-2 rounded-xl border border-[#dce6df] hover:border-[#004f46] text-[#004f46] font-bold text-xs bg-white shadow-2xs transition-colors self-start sm:self-auto cursor-pointer"
+          >
+            See marketplace →
+          </button>
+        </div>
+
+        {userListings.length > 0 ? (
+          <div className="space-y-3.5">
+            {userListings.map((p) => {
+              const isArchived = p.status === 'archived';
+              return (
+                <article 
+                  key={p.id}
+                  className="bg-white border border-[#dce8df] rounded-2xl overflow-hidden flex flex-col sm:flex-row items-stretch shadow-2xs transition-all hover:border-[#b8d1c2]"
+                >
+                  {/* Thumbnail Photo */}
+                  <div className="w-full sm:w-52 h-44 sm:h-auto min-h-[140px] shrink-0 bg-[#eef4f0] relative">
+                    <img 
+                      src={p.image || PRESET_IMAGES[0]} 
+                      alt={p.title} 
+                      className={`w-full h-full object-cover ${isArchived ? 'grayscale opacity-75' : ''}`}
+                    />
+                  </div>
+
+                  {/* Details Panel */}
+                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between gap-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          isArchived ? 'bg-gray-100 text-gray-600' : 'bg-[#edf7f3] text-[#004f46] border border-[#cbe4d7]'
+                        }`}>
+                          {(p.type || p.kind || 'Listing').toUpperCase()} · {isArchived ? 'ARCHIVED' : 'ACTIVE'}
+                        </span>
+                        <span className="text-[11px] text-[#718278]">{p.category}</span>
+                      </div>
+
+                      <h3 className="font-serif text-lg font-bold text-[#004f46]">
+                        {p.title}
+                      </h3>
+
+                      <p className="text-xs text-[#596e64] line-clamp-2">
+                        <span className="font-semibold text-[#143e33]">{p.area || 'Frisco'}</span>
+                        {' · '}
+                        <span className="font-bold text-[#004f46]">${Number(p.price || 0).toFixed(2)}</span>
+                        {' · '}
+                        <span>{p.desc || p.description || 'Verified local listing item.'}</span>
+                      </p>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 pt-2 border-t border-[#f0f4f1]">
+                      <button
+                        type="button"
+                        onClick={() => handleEditListing(p)}
+                        className="px-3 py-1.5 rounded-lg border border-[#dce6df] hover:border-[#004f46] text-[#004f46] text-xs font-semibold bg-white transition-colors cursor-pointer"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleArchive(p.id)}
+                        className="px-3 py-1.5 rounded-lg border border-[#dce6df] hover:border-[#004f46] text-[#004f46] text-xs font-semibold bg-white transition-colors cursor-pointer"
+                      >
+                        {isArchived ? 'Restore' : 'Archive'}
+                      </button>
+                      {!isArchived && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (setActiveListing) setActiveListing(p);
+                            setRoute('explore');
+                          }}
+                          className="px-3 py-1.5 rounded-lg border border-[#004f46] bg-[#edf7f3] text-[#004f46] text-xs font-bold hover:bg-[#004f46] hover:text-white transition-colors cursor-pointer"
+                        >
+                          View
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeListing(p.id)}
+                        className="ml-auto text-xs text-red-500 hover:text-red-700 hover:underline cursor-pointer"
+                        title="Permanently remove"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="bg-white border border-[#dce8df] rounded-2xl p-8 sm:p-12 text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-[#9b782c] flex items-center justify-center mx-auto border border-amber-200/50">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <h3 className="font-serif text-lg font-bold text-[#004f46]">
+              No Studio posts yet.
+            </h3>
+            <p className="text-xs text-[#718278] max-w-md mx-auto">
+              Load the sample Studio business or create your first listing above to see it immediately in Explore.
+            </p>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={handleSeedDemoInventory}
+                className="gold-gradient-btn px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm cursor-pointer"
+              >
+                Load example inventory →
+              </button>
             </div>
           </div>
-        </section>
-      )}
+        )}
+      </section>
     </div>
   );
 };

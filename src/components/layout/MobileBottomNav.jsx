@@ -5,7 +5,8 @@ import { Search, Briefcase, Crown, MessageSquare, User } from 'lucide-react';
 const MOBILE_NAV = [
   { id: 'explore', label: 'Explore', icon: Search },
   { id: 'bookings', label: 'Listings', icon: Briefcase },
-  { id: 'elite-pm', label: 'Elite PM', icon: Crown, isElite: true },
+  // Hidden per user request (kept intact for easy re-enabling)
+  { id: 'elite-pm', label: 'Elite PM', icon: Crown, isElite: true, hidden: true },
   { id: 'messages', label: 'Messages', icon: MessageSquare },
   { id: 'profile', label: 'Account', icon: User },
 ];
@@ -15,7 +16,7 @@ export const MobileBottomNav = () => {
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#070b0f]/95 backdrop-blur-xl border-t border-[#d7b467]/30 py-1.5 px-2 flex items-center justify-around shadow-[0_-4px_25px_rgba(0,0,0,0.5)]">
-      {MOBILE_NAV.map((item) => {
+      {MOBILE_NAV.filter((item) => !item.hidden).map((item) => {
         const Icon = item.icon;
         const isActive = route === item.id;
         return (

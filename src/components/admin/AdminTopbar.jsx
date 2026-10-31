@@ -36,7 +36,7 @@ export const AdminTopbar = () => {
       {/* Left Title Area */}
       <div>
         <div className="text-[10px] uppercase font-bold tracking-widest text-[#698a7c]">
-          IDLE / Admin Operations Sandbox
+          IDLE / Admin Operations
         </div>
         <h2 className="text-base sm:text-lg font-bold text-[#0c302c] font-serif leading-tight">
           {currentTitle}
@@ -79,11 +79,10 @@ export const AdminTopbar = () => {
                         setRole(rName);
                         setRoleDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors cursor-pointer ${
-                        isCurrent
-                          ? 'bg-[#0c302c] text-white font-bold'
-                          : 'hover:bg-gray-50 text-gray-800'
-                      }`}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors cursor-pointer ${isCurrent
+                        ? 'bg-[#0c302c] text-white font-bold'
+                        : 'hover:bg-gray-50 text-gray-800'
+                        }`}
                     >
                       <div>
                         <div className="flex items-center gap-1.5 font-semibold">
@@ -104,14 +103,14 @@ export const AdminTopbar = () => {
         </div>
 
         {/* View Marketplace Button */}
-        <button
+        {/* <button
           type="button"
           onClick={() => setRoute('home')}
           className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
         >
           <span>Marketplace</span>
           <ExternalLink className="w-3.5 h-3.5 text-gray-400" />
-        </button>
+        </button> */}
 
         {/* Lock Console / Sign Out Button */}
         <button
@@ -121,7 +120,7 @@ export const AdminTopbar = () => {
           title="Sign out of admin"
         >
           <LogOut className="w-3.5 h-3.5" />
-          <span>Lock</span>
+          <span>Logout</span>
         </button>
       </div>
     </header>

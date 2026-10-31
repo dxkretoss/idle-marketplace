@@ -42,9 +42,15 @@ export const AppProvider = ({ children }) => {
   const PHASE_2_ROUTES = [];
 
   const getInitialRoute = () => {
-    // Check clean pathname first (e.g. /post, /explore)
+    // Check clean pathname first (e.g. /post, /explore, /admin)
     const pathname = window.location.pathname.replace(/^\/+/, '').split('/')[0];
-    if (pathname && VALID_ROUTES.includes(pathname) && !PHASE_2_ROUTES.includes(pathname)) {
+    
+    // When visiting root URL (e.g. http://localhost:3000/ with no sub-path), ALWAYS open User Dashboard
+    if (!pathname) {
+      return 'home';
+    }
+
+    if (VALID_ROUTES.includes(pathname) && !PHASE_2_ROUTES.includes(pathname)) {
       return pathname;
     }
     // Clean up any remaining legacy hash if present
@@ -53,7 +59,7 @@ export const AppProvider = ({ children }) => {
       window.history.replaceState(null, '', hash === 'home' ? '/' : `/${hash}`);
       return hash;
     }
-    return savedState?.route && !PHASE_2_ROUTES.includes(savedState.route) ? savedState.route : 'home';
+    return 'home';
   };
 
   // Core navigation route (clean URLs without #)
@@ -181,6 +187,31 @@ export const AppProvider = ({ children }) => {
 
   // Bookings & Transactions Lifecycle
   const [bookings, setBookings] = useState(savedState?.bookings || [
+    {
+      id: 'BK-1101',
+      listingId: 11,
+      itemId: 11,
+      listingTitle: 'Enterprise project staffing',
+      provider: 'Northline Operations',
+      renterName: 'Alex Morgan',
+      price: 420,
+      unit: 'day',
+      rentalDays: 1,
+      dates: '10/31/2026',
+      deposit: 1000,
+      total: 443.00,
+      stage: 'Payment review',
+      protectionPlanEnabled: true,
+      protectionDailyRate: 12.50,
+      policyId: 'TN-420EPS-26',
+      created: Date.now() - 3600000,
+      qrToken: 'IDLE-DEMO-001101',
+      image: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=800&q=80',
+      statusHistory: [
+        { time: '1 hour ago', message: 'Enterprise staffing agreement preview accepted' },
+        { time: 'Just now', message: 'Payment authorization and Tint.ai protection review ready' }
+      ]
+    },
     {
       id: 'BK-9872',
       listingId: 2,
@@ -384,6 +415,11 @@ export const AppProvider = ({ children }) => {
   const removeListing = (id) => {
     setListings(prev => prev.filter(x => x.id !== id));
     addToast('Listing removed', 'info');
+  };
+
+  // Update or toggle archive listing
+  const updateListing = (id, updates) => {
+    setListings(prev => prev.map(x => x.id === id ? { ...x, ...updates } : x));
   };
 
   // Add 24-hr social reel
@@ -684,7 +720,7 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     try {
       const stateToSave = {
-        route,
+        route: route === 'admin' ? 'home' : route,
         plan,
         ownerRole,
         user,
@@ -740,6 +776,8 @@ export const AppProvider = ({ children }) => {
       toggleLike,
       addListing,
       removeListing,
+      updateListing,
+      setListings,
       reels,
       reelsFilter,
       setReelsFilter,

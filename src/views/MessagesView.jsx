@@ -61,7 +61,7 @@ const PROVIDER_PROFILES = {
     name: 'Avery Style Collective',
     contactPerson: 'Avery Brooks',
     role: 'Wardrobe Stylist & Occasion Designer',
-    tier: 'Trade Member',
+    tier: 'Studio Member',
     location: 'Plano, TX · DFW Pilot',
     rating: 4.96,
     reviewsCount: 67,
@@ -126,7 +126,7 @@ export const MessagesView = () => {
     );
   }
 
-  const isPaid = ['Trade', 'Business', 'Enterprise'].includes(plan);
+  const isPaid = ['Studio', 'Studio Pro', 'Business', 'Enterprise', 'Trade'].includes(plan);
 
   // Filtered threads for left column
   const filteredInbox = inbox.filter(t => {
@@ -144,7 +144,7 @@ export const MessagesView = () => {
     name: activeThread?.providerName || 'Local Member',
     contactPerson: activeThread?.providerName || 'Member',
     role: 'Verified Marketplace Host',
-    tier: 'Trade Member',
+    tier: 'Studio Member',
     location: 'North Texas Pilot Area',
     rating: 4.95,
     reviewsCount: 24,
@@ -242,7 +242,7 @@ const handleImageAttachment = (e) => {
                 Direct Member Messaging is a Paid Feature
               </h3>
               <p className="text-xs text-[#2b4d42] leading-relaxed">
-                Free accounts can browse listings and post community requests. Upgrading to Trade ($15/mo) unlocks in-app negotiations, instant provider chat, and single-use QR custody transfers.
+                Free accounts can browse listings and post community requests. Upgrading to Studio ($29/mo) unlocks in-app negotiations, instant provider chat, and single-use QR custody transfers.
               </p>
             </div>
           </div>
@@ -252,14 +252,14 @@ const handleImageAttachment = (e) => {
               onClick={() => setRoute('membership')}
               className="gold-gradient-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-md flex items-center gap-2 cursor-pointer"
             >
-              <span>Upgrade to Trade ($15/mo)</span>
+              <span>Upgrade to Studio ($29/mo)</span>
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setPlan('Trade')}
+              onClick={() => setPlan('Studio')}
               className="px-4 py-2 rounded-xl text-xs font-semibold bg-white border border-idle-emerald text-idle-emerald hover:bg-idle-mint transition-colors cursor-pointer"
             >
-              Test as Trade Member (Instant Demo)
+              Test as Studio Member (Instant Demo)
             </button>
           </div>
         </div>

@@ -485,7 +485,7 @@ export const RESOURCE_GUIDES = [
     iconName: 'UserCheck',
     badge: 'Core Policy',
     summary: 'How IDLE subscription plans work without transaction commissions. Plan upgrades, role permissions, and billing cycles.',
-    content: 'IDLE operates on a transparent subscription model rather than charging per-transaction commission fees. Free members can browse and submit eligible service requests. Trade ($15/mo), Business ($45/mo), and Enterprise ($90/mo) unlock listings, messaging, QR custody handoffs, and business team dispatch.'
+    content: 'IDLE operates on a transparent subscription model rather than charging per-transaction commission fees. Free members can browse and submit eligible service requests. Studio ($29/mo), Studio Pro ($59/mo), Business ($149/mo), and Enterprise ($399/mo) unlock listings, messaging, QR custody handoffs, and business team dispatch.'
   },
   {
     id: 'payments',
@@ -572,83 +572,111 @@ export const RESOURCE_GUIDES = [
 export const PLANS = [
   {
     id: 'Free',
-    name: 'Free Member',
+    name: 'Free',
     price: 0,
-    period: 'forever',
-    badge: 'Community',
-    description: 'Explore the local marketplace, browse items, save favorites, and post eligible requests.',
+    period: 'month',
+    badge: 'Discovery',
+    caption: 'Browse, profile and view local Reels',
+    description: 'Free discovery for everyone. Explore the marketplace, browse items, save favorites, and view local Reels.',
+    seats: 1,
+    services: 0,
+    rentals: 0,
+    reels: 0,
     features: [
-      'Browse all local listings & map view',
-      'Watch public 24-hour social Reels',
-      'Post eligible community requests',
-      'Save favorites and search alerts',
-      'Standard community support'
+      'Profile, public listings and nearby Reels',
+      'Explore Grid / Map / List and save favorites',
+      'No new chats, posts, offers or self-marketing'
     ],
-    buttonText: 'Current Plan',
-    isCurrent: true,
-    highlight: false
+    buttonText: 'Current demo access',
+    highlight: false,
+    isRecommended: false
   },
   {
-    id: 'Trade',
-    name: 'Trade',
-    price: 15,
+    id: 'Studio',
+    name: 'Studio',
+    price: 29,
     period: 'month',
-    badge: 'Most Popular',
-    description: 'For individuals, freelancers, and side-earners looking to rent out gear and offer local skills.',
+    badge: 'Starter',
+    caption: 'Start with four offers and four rentals',
+    description: 'Start offering services and renting gear with direct messaging and custody handoffs.',
+    seats: 1,
+    services: 4,
+    rentals: 4,
+    reels: 1,
     features: [
-      'All Free Member features',
-      'Unlimited rental & service listings',
-      'Post 24-hour promotional Reels',
-      'Direct messaging & price negotiations',
-      'Stripe Connect instant payouts',
-      'Single-use QR code handoff security',
-      'Zero commission on member transactions'
+      '1 user · 4 active service/task earning listings',
+      '4 active rentals · 1 new Reel per 24h',
+      'Messaging, offers, agreements and handoffs'
     ],
-    buttonText: 'Upgrade to Trade',
-    isCurrent: false,
-    highlight: true
+    buttonText: 'Preview Studio',
+    highlight: false,
+    isRecommended: false
+  },
+  {
+    id: 'Studio Pro',
+    name: 'Studio Pro',
+    price: 59,
+    period: 'month',
+    badge: 'For growing independents',
+    caption: 'Multi-trade tools for independent operators',
+    description: 'Multi-trade tools, calendar scheduling, analytics and higher listing allowances.',
+    seats: 1,
+    services: 20,
+    rentals: 20,
+    reels: 3,
+    features: [
+      '1 user · 20 active service/task listings',
+      '20 active rentals · 3 Reels per 24h',
+      'Multiple trades, bundles, calendar and analytics'
+    ],
+    buttonText: 'Preview Studio Pro',
+    highlight: true,
+    isRecommended: true
   },
   {
     id: 'Business',
     name: 'Business',
-    price: 45,
+    price: 149,
     period: 'month',
     badge: 'Growing Teams',
-    description: 'For established rental shops, contractors, and service businesses requiring higher volume.',
+    caption: 'Team inventory, approvals and dispatch',
+    description: 'Team inventory, multiple locations, role approvals, team tools and dispatch.',
+    seats: 5,
+    services: 60,
+    rentals: 60,
+    reels: 6,
     features: [
-      'All Trade features included',
-      'Up to 3 named team seats',
-      'Multiple location inventory management',
-      'Verified Business trust badge',
-      'Priority placement in search results',
-      'Automated invoice generation',
-      'Security deposit hold management'
+      '5 named seats · 60 service/task listings',
+      '60 active rentals · 6 Reels per 24h',
+      '3 locations, approvals and team tools'
     ],
-    buttonText: 'Upgrade to Business',
-    isCurrent: false,
-    highlight: false
+    buttonText: 'Preview Business',
+    highlight: false,
+    isRecommended: false
   },
   {
     id: 'Enterprise',
     name: 'Enterprise',
-    price: 90,
+    price: 399,
     period: 'month',
     badge: 'Operations Hub',
-    description: 'Full operational suite with 10 seats, field dispatching, live GPS tasks, and fleet tools.',
+    caption: 'Multi-site operations and advanced controls',
+    description: 'Multi-site operations, fair-use eligible listings, API exports and advanced controls.',
+    seats: 10,
+    services: Infinity,
+    rentals: Infinity,
+    reels: 12,
     features: [
-      '10 baseline named team seats',
-      'Real-time task dispatch & live ETA',
-      'Fleet & heavy equipment calendar',
-      'Multi-tier role approvals',
-      'Enterprise analytics & audit logs',
-      'Dedicated account manager',
-      'Custom API & Webhook integrations'
+      '10 named seats · fair-use eligible listings',
+      '12 Reels per 24h · multi-site operations',
+      'Dispatch, API/export concepts and advanced controls'
     ],
-    buttonText: 'Upgrade to Enterprise',
-    isCurrent: false,
-    highlight: false
+    buttonText: 'Preview Enterprise',
+    highlight: false,
+    isRecommended: false
   }
 ];
+
 
 export const ENTERPRISE_LANES = [
   {
@@ -705,7 +733,7 @@ export const INITIAL_ENTERPRISE_TASKS = [
 
 export const JOURNEY_STEPS = [
   { step: 1, title: 'Welcome & Signup', category: 'Discovery', desc: 'New member creates account with email or Apple/Google sign-in.' },
-  { step: 2, title: 'Choose Participation', category: 'Discovery', desc: 'Select casual explorer, peer provider (Trade), or commercial business.' },
+  { step: 2, title: 'Choose Participation', category: 'Discovery', desc: 'Select casual explorer, peer provider (Studio), or commercial business.' },
   { step: 3, title: 'Build Profile & ID Check', category: 'Verification', desc: 'Set local service area (e.g. Frisco/Dallas) and verify ID with Stripe.' },
   { step: 4, title: 'Activate Tools & Connect', category: 'Verification', desc: 'Setup Stripe Connect payout account for direct bank transfers.' },
   { step: 5, title: 'Explore or Post Listing', category: 'Marketplace', desc: 'Search nearby listings, watch 24-hr Reels, or publish gear to rent.' },
