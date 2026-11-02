@@ -27,8 +27,7 @@ import { TermsView } from './views/TermsView';
 import { ElitePmView } from './views/ElitePmView';
 import { OwnerSandboxView } from './views/OwnerSandboxView';
 import { TasksView } from './views/TasksView';
-import { AdminProvider } from './context/AdminContext';
-import { AdminLayout } from './views/admin/AdminLayout';
+import { NotFoundView } from './views/NotFoundView';
 
 const MainContent = () => {
   const { route } = useApp();
@@ -73,20 +72,12 @@ const MainContent = () => {
         return <ElitePmView />;
       case 'owner':
         return <OwnerSandboxView />;
+      case '404':
+        return <NotFoundView />;
       default:
-        return <HomeView />;
+        return <NotFoundView />;
     }
   };
-
-  // Standalone full-screen layout for Admin Console (/admin)
-  if (route === 'admin') {
-    return (
-      <div className="min-h-screen w-full bg-[#f4f7f5] text-[#172d28]">
-        <AdminLayout />
-        <ToastContainer />
-      </div>
-    );
-  }
 
   // Standalone full-screen layout for Authentication page
   if (route === 'auth') {
@@ -133,9 +124,7 @@ const MainContent = () => {
 export default function App() {
   return (
     <AppProvider>
-      <AdminProvider>
-        <MainContent />
-      </AdminProvider>
+      <MainContent />
     </AppProvider>
   );
 }

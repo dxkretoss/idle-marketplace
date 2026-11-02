@@ -38,11 +38,11 @@ export const AppProvider = ({ children }) => {
 
   const savedState = loadInitialState();
 
-  const VALID_ROUTES = ['home', 'explore', 'reels', 'tasks', 'post', 'messages', 'transactions', 'bookings', 'enterprise', 'resources', 'membership', 'profile', 'journey', 'auth', 'privacy', 'terms', 'contact', 'elite-pm', 'admin', 'owner'];
+  const VALID_ROUTES = ['home', 'explore', 'reels', 'tasks', 'post', 'messages', 'transactions', 'bookings', 'enterprise', 'resources', 'membership', 'profile', 'journey', 'auth', 'privacy', 'terms', 'contact', 'elite-pm', 'owner', '404'];
   const PHASE_2_ROUTES = [];
 
   const getInitialRoute = () => {
-    // Check clean pathname first (e.g. /post, /explore, /admin)
+    // Check clean pathname first (e.g. /post, /explore)
     const pathname = window.location.pathname.replace(/^\/+/, '').split('/')[0];
     
     // When visiting root URL (e.g. http://localhost:3000/ with no sub-path), ALWAYS open User Dashboard
@@ -59,7 +59,7 @@ export const AppProvider = ({ children }) => {
       window.history.replaceState(null, '', hash === 'home' ? '/' : `/${hash}`);
       return hash;
     }
-    return 'home';
+    return '404';
   };
 
   // Core navigation route (clean URLs without #)
@@ -360,12 +360,13 @@ export const AppProvider = ({ children }) => {
   // Support browser Back and Forward navigation
   useEffect(() => {
     const handlePopState = () => {
-      const pathname = window.location.pathname.replace(/^\/+/, '').split('/')[0] || 'home';
-      if (VALID_ROUTES.includes(pathname) && !PHASE_2_ROUTES.includes(pathname)) {
-        setRouteState(pathname);
-      } else {
+      const rawPath = window.location.pathname.replace(/^\/+/, '').split('/')[0];
+      if (!rawPath) {
         setRouteState('home');
-        window.history.replaceState(null, '', '/');
+      } else if (VALID_ROUTES.includes(rawPath) && !PHASE_2_ROUTES.includes(rawPath)) {
+        setRouteState(rawPath);
+      } else {
+        setRouteState('404');
       }
     };
     window.addEventListener('popstate', handlePopState);
@@ -720,7 +721,7 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     try {
       const stateToSave = {
-        route: route === 'admin' ? 'home' : route,
+        route,
         plan,
         ownerRole,
         user,
