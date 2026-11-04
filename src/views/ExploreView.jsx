@@ -126,7 +126,9 @@ export const ExploreView = () => {
     likes, 
     addToast,
     setActiveListing,
-    setRoute
+    setRoute,
+    isAuthenticated,
+    openAuth
   } = useApp();
 
   const [viewMode, setViewMode] = useState('grid');
@@ -464,12 +466,13 @@ export const ExploreView = () => {
             onClick={() => {
               if (!isAuthenticated) {
                 addToast('Please sign in or create an account to post a listing', 'info');
-                setRoute('auth');
+                openAuth('signin');
               } else {
                 setRoute('post');
               }
             }}
-            className="gold-gradient-btn px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-bold shadow-xs flex items-center gap-1.5 shrink-0 cursor-pointer"
+            className="gold-gradient-btn px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-bold shadow-xs flex items-center gap-1.5 shrink-0 cursor-pointer hover:opacity-90 active:scale-95 transition-all"
+            title="Create a new listing"
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
             <span>Create post</span>
