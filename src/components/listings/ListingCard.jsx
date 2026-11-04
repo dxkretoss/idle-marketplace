@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { MapPin, Heart, ShieldCheck, Star } from 'lucide-react';
 
 export const ListingCard = ({ listing }) => {
-  const { setActiveListing, likes, toggleLike } = useApp();
+  const { setActiveListing, setSelectedProvider, likes, toggleLike } = useApp();
 
   const isLiked = likes.includes(listing.id);
 
@@ -75,9 +75,24 @@ export const ListingCard = ({ listing }) => {
 
         {/* Owner & Demo tag */}
         <div className="flex items-center justify-between pt-2.5 mt-2 border-t border-idle-line/60 text-[11px]">
-          <span className="text-idle-muted truncate max-w-[120px]">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (setSelectedProvider) {
+                setSelectedProvider({
+                  name: listing.owner,
+                  area: listing.area,
+                  rating: listing.rating,
+                  reviewsCount: listing.reviewsCount
+                });
+              }
+            }}
+            className="text-idle-muted hover:text-idle-emerald hover:underline truncate max-w-[130px] text-left cursor-pointer"
+            title={`View ${listing.owner}'s profile, listings & reviews`}
+          >
             {listing.owner}
-          </span>
+          </button>
           <span className="text-[9px] font-bold text-amber-800 bg-amber-100/70 px-1.5 py-0.5 rounded">
             DEMO
           </span>

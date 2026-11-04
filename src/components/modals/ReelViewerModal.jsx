@@ -14,6 +14,19 @@ import {
   Tag
 } from 'lucide-react';
 
+// Author profile pictures for reels
+const AUTHOR_AVATARS = {
+  'Avery Style': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+  'Taylor Fitness': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
+  'Atlas Home Services': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
+  'Northline Rentals': 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=300&q=80',
+  'Maya Creative': 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
+  'MoveWell Logistics': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=300&q=80',
+  'Harbor Workspaces': 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=300&q=80',
+  'Gather Events': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+  'Marcus Vance': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80'
+};
+
 export const ReelViewerModal = () => {
   const { 
     activeReel, 
@@ -21,7 +34,8 @@ export const ReelViewerModal = () => {
     reels, 
     reelsFilter,
     user,
-    setActiveListing, 
+    setActiveListing,
+    setSelectedProvider,
     listings, 
     addToast 
   } = useApp();
@@ -129,35 +143,60 @@ export const ReelViewerModal = () => {
 
         {/* Top Header */}
         <div className="absolute top-5 left-0 right-0 z-30 px-4 py-2 flex items-center justify-between text-white bg-gradient-to-b from-black/70 to-transparent">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#d6a746] to-[#004f46] border-2 border-white/80 flex items-center justify-center text-xs font-bold text-white shadow-md">
-              {activeReel.author?.[0] || 'I'}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <strong className="text-xs md:text-sm font-bold block leading-tight truncate max-w-[130px]">{activeReel.author}</strong>
-                <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-idle-gold/25 text-idle-gold border border-idle-gold/40">
-                  {activeReel.category}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 text-[10px] text-emerald-200 mt-0.5">
-                <MapPin className="w-3 h-3 text-idle-gold" />
-                <span>{activeReel.area}</span>
-                <span>·</span>
-                <span className="flex items-center gap-0.5 text-idle-goldLight font-semibold">
-                  <Clock className="w-2.5 h-2.5" /> {hoursLeft}h left
-                </span>
-                {currentPlaylist.length > 1 && (
-                  <>
-                    <span>·</span>
-                    <span className="text-[10px] text-white/80 font-medium">
-                      {currentIndex + 1}/{currentPlaylist.length}
+          {(() => {
+            const authorAvatar = activeReel.avatar || AUTHOR_AVATARS[activeReel.author] || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80';
+            return (
+              <div 
+                onClick={() => {
+                  setActiveReel(null);
+                  setSelectedProvider({
+                    name: activeReel.author,
+                    area: activeReel.area,
+                    avatar: authorAvatar,
+                    image: authorAvatar
+                  });
+                }}
+                className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition-opacity"
+                title={`View ${activeReel.author}'s profile, listings & reviews`}
+              >
+                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/90 shadow-md shrink-0 bg-black/40">
+                  <img
+                    src={authorAvatar}
+                    alt={activeReel.author}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80';
+                    }}
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <strong className="text-xs md:text-sm font-bold block leading-tight truncate max-w-[130px] hover:underline">{activeReel.author}</strong>
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-idle-gold/25 text-idle-gold border border-idle-gold/40">
+                      {activeReel.category}
                     </span>
-                  </>
-                )}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[10px] text-emerald-200 mt-0.5">
+                    <MapPin className="w-3 h-3 text-idle-gold" />
+                    <span>{activeReel.area}</span>
+                    <span>·</span>
+                    <span className="flex items-center gap-0.5 text-idle-goldLight font-semibold">
+                      <Clock className="w-2.5 h-2.5" /> {hoursLeft}h left
+                    </span>
+                    {currentPlaylist.length > 1 && (
+                      <>
+                        <span>·</span>
+                        <span className="text-[10px] text-white/80 font-medium">
+                          {currentIndex + 1}/{currentPlaylist.length}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            );
+          })()}
 
           <button
             onClick={() => setActiveReel(null)}

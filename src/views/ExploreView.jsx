@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { CATEGORIES } from '../data/mockData';
 import { ListingCard } from '../components/listings/ListingCard';
+import { CategoryNavigation } from '../components/common/CategoryNavigation';
 import { 
   Search, 
   Heart, 
@@ -12,6 +13,7 @@ import {
   Map as MapIcon, 
   ListFilter, 
   MapPin, 
+  SlidersHorizontal,
   ExternalLink 
 } from 'lucide-react';
 
@@ -254,7 +256,7 @@ export const ExploreView = () => {
 
         <div className="relative z-10 max-w-2xl mx-auto space-y-2 drop-shadow-md">
           <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-idle-goldLight drop-shadow block">
-            Local Marketplace Directory · DFW Pilot
+            LOCAL MARKETPLACE DIRECTORY · DFW PILOT
           </span>
           <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight drop-shadow-lg">
             Discover what’s around you.
@@ -296,154 +298,133 @@ export const ExploreView = () => {
         </div>
       </section>
 
-      {/* Horizontal Category Strip - Single Scrollable Row */}
-      <div className="flex items-center gap-2.5 sm:gap-3 overflow-x-auto no-scrollbar py-1">
-        {EXPLORE_CATEGORIES.map((cat) => {
-          const isSelected = category === cat.id;
-          return (
+      {/* Category Navigation - Horizontal Scrollable Shortcuts */}
+      <CategoryNavigation
+        activeCategory={category}
+        onSelectCategory={(catId) => setCategory(catId)}
+      />
+
+      {/* Streamlined Premium Discovery Controls & Filters - Ultra Compact on Mobile */}
+      <div className="bg-white border border-[#dee8e1] rounded-2xl p-2.5 sm:p-3.5 shadow-2xs space-y-2.5">
+        {/* Row 1: Mode Switch on Left + Saved & Save Search Pills on Right */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          {/* Mode Switcher */}
+          <div className="mode-switch !p-0.5 sm:!p-1 !rounded-xl" aria-label="Change discovery view">
             <button
-              key={cat.id}
               type="button"
-              onClick={() => setCategory(cat.id)}
-              className={`group flex flex-col items-center w-28 sm:w-32 flex-shrink-0 rounded-2xl overflow-hidden border transition-all duration-200 cursor-pointer bg-white ${
-                isSelected
-                  ? 'border-2 border-idle-emerald shadow-sm ring-1 ring-idle-emerald/30'
-                  : 'border-idle-line hover:border-idle-emerald/40 hover:shadow-xs'
-              }`}
+              onClick={() => setViewMode('grid')}
+              className={`!min-h-[32px] sm:!min-h-[36px] !py-1 sm:!py-1.5 !px-2.5 sm:!px-3 !text-xs ${viewMode === 'grid' ? 'active' : ''}`}
+              aria-pressed={viewMode === 'grid'}
             >
-              <div className="relative w-full h-16 sm:h-20 overflow-hidden bg-emerald-950/5">
-                <img
-                  src={cat.image}
-                  alt={cat.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-
-              <div className="w-full py-2 px-1 text-center">
-                <span className={`text-[11px] sm:text-xs font-bold leading-tight block truncate ${
-                  isSelected ? 'text-idle-emerald font-extrabold' : 'text-[#0e2e28] group-hover:text-idle-emerald'
-                }`}>
-                  {cat.title}
-                </span>
-              </div>
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Grid</span>
             </button>
-          );
-        })}
-      </div>
+            <button
+              type="button"
+              onClick={() => {
+                setViewMode('map');
+                if (!selectedMapId && filtered.length > 0) {
+                  setSelectedMapId(filtered[0].id);
+                }
+              }}
+              className={`!min-h-[32px] sm:!min-h-[36px] !py-1 sm:!py-1.5 !px-2.5 sm:!px-3 !text-xs ${viewMode === 'map' ? 'active' : ''}`}
+              aria-pressed={viewMode === 'map'}
+            >
+              <MapIcon className="w-3.5 h-3.5" />
+              <span>Map</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`!min-h-[32px] sm:!min-h-[36px] !py-1 sm:!py-1.5 !px-2.5 sm:!px-3 !text-xs ${viewMode === 'list' ? 'active' : ''}`}
+              aria-pressed={viewMode === 'list'}
+            >
+              <ListFilter className="w-3.5 h-3.5" />
+              <span>List</span>
+            </button>
+          </div>
 
-      {/* Streamlined Compact Discovery Controls & Filters - Minimal Scroll & 100% Responsive */}
-      <div className="bg-white border border-[#dee8e1] rounded-2xl p-3 sm:p-3.5 shadow-2xs space-y-3">
-        {/* Row 1: Mode Switch + Quick Pills on Left; Area, Radius, Sort on Right */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 flex-wrap">
-          {/* Left: View Switcher & Quick Action Pills */}
-          <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
-            <div className="mode-switch !p-1 !rounded-xl" aria-label="Change discovery view">
-              <button
-                type="button"
-                onClick={() => setViewMode('grid')}
-                className={`!min-h-[36px] !py-1.5 !px-3 !text-xs ${viewMode === 'grid' ? 'active' : ''}`}
-                aria-pressed={viewMode === 'grid'}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span>Grid</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setViewMode('map');
-                  if (!selectedMapId && filtered.length > 0) {
-                    setSelectedMapId(filtered[0].id);
-                  }
-                }}
-                className={`!min-h-[36px] !py-1.5 !px-3 !text-xs ${viewMode === 'map' ? 'active' : ''}`}
-                aria-pressed={viewMode === 'map'}
-              >
-                <MapIcon className="w-3.5 h-3.5" />
-                <span>Map</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('list')}
-                className={`!min-h-[36px] !py-1.5 !px-3 !text-xs ${viewMode === 'list' ? 'active' : ''}`}
-                aria-pressed={viewMode === 'list'}
-              >
-                <ListFilter className="w-3.5 h-3.5" />
-                <span>List</span>
-              </button>
-            </div>
-
+          {/* Quick Action Pills: Saved & Save Search */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={() => setOnlyFavorites(!onlyFavorites)}
-              className={`filter-pill !py-1.5 !px-3 !text-xs !min-h-[36px] ${onlyFavorites ? 'selected' : ''}`}
+              className={`flex items-center gap-1.5 py-1 px-2.5 sm:py-1.5 sm:px-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                onlyFavorites
+                  ? 'bg-idle-mint border-idle-emerald text-idle-emerald shadow-2xs font-bold'
+                  : 'bg-[#f4f7f5] hover:bg-white border-[#dce6df] text-[#2c4b42]'
+              }`}
+              title="View your saved listings"
             >
-              <Heart className={`w-3.5 h-3.5 ${onlyFavorites ? 'fill-current' : ''}`} />
+              <Heart className={`w-3.5 h-3.5 ${onlyFavorites ? 'fill-current text-idle-emerald' : 'text-idle-muted'}`} />
               <span>Saved ({likes.length})</span>
             </button>
 
             <button
               type="button"
               onClick={handleSaveSearch}
-              className="filter-pill !py-1.5 !px-3 !text-xs !min-h-[36px]"
+              className="flex items-center gap-1 py-1 px-2.5 sm:py-1.5 sm:px-3 rounded-xl border border-[#dce6df] bg-[#f4f7f5] hover:bg-white text-[#2c4b42] text-xs font-semibold transition-all cursor-pointer"
+              title="Save current search criteria"
             >
               <Sparkles className="w-3.5 h-3.5 text-idle-gold" />
-              <span>Save search</span>
+              <span className="hidden sm:inline">Save search</span>
+              <span className="sm:hidden">Save</span>
             </button>
-          </div>
-
-          {/* Right: Area, Radius, Sort in one balanced cluster */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-            <label className="flex items-center gap-1.5 text-xs font-bold text-[#476357]">
-              <span>Area</span>
-              <select
-                value={mapCity}
-                onChange={(e) => setMapCity(e.target.value)}
-                className="py-1.5 px-2.5 border border-[#cadbd2] rounded-xl bg-white text-[#004f46] text-xs font-bold min-h-[36px] outline-none cursor-pointer focus:border-idle-emerald"
-                aria-label="Filter area"
-              >
-                <option value="Frisco">Frisco</option>
-                <option value="Plano">Plano</option>
-                <option value="Allen">Allen</option>
-                <option value="McKinney">McKinney</option>
-                <option value="Dallas">Dallas</option>
-              </select>
-            </label>
-
-            <label className="flex items-center gap-1.5 text-xs font-bold text-[#476357]">
-              <span>Radius</span>
-              <select
-                value={mapRadius}
-                onChange={(e) => setMapRadius(Number(e.target.value))}
-                className="py-1.5 px-2.5 border border-[#cadbd2] rounded-xl bg-white text-[#004f46] text-xs font-bold min-h-[36px] outline-none cursor-pointer focus:border-idle-emerald"
-                aria-label="Filter radius"
-              >
-                <option value={10}>10 mi</option>
-                <option value={20}>20 mi</option>
-                <option value={40}>40 mi</option>
-                <option value={80}>80 mi</option>
-              </select>
-            </label>
-
-            <label className="flex items-center gap-1.5 text-xs font-bold text-[#476357]">
-              <span>Sort</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="py-1.5 px-2.5 border border-[#cadbd2] rounded-xl bg-white text-[#004f46] text-xs font-bold min-h-[36px] outline-none cursor-pointer focus:border-idle-emerald"
-                aria-label="Sort listings"
-              >
-                <option value="featured">Featured</option>
-                <option value="low">Price: Low to High</option>
-                <option value="high">Price: High to Low</option>
-                <option value="az">Name: A to Z</option>
-              </select>
-            </label>
           </div>
         </div>
 
-        {/* Optional Saved Search tags row if any were saved */}
+        {/* Row 2: Filter Pills Cluster: Area, Radius, Sort in ONE smooth horizontal bar */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+          <div className="flex items-center gap-1 px-2.5 py-1 bg-[#f4f8f5] hover:bg-white border border-[#dce8df] rounded-full text-xs font-bold text-[#004f46] shrink-0 transition-colors shadow-2xs">
+            <MapPin className="w-3.5 h-3.5 text-idle-emerald" />
+            <select
+              value={mapCity}
+              onChange={(e) => setMapCity(e.target.value)}
+              className="bg-transparent border-0 outline-none cursor-pointer text-xs font-bold text-[#004f46] py-0.5 pr-1"
+              aria-label="Filter area"
+            >
+              <option value="Frisco">Frisco</option>
+              <option value="Plano">Plano</option>
+              <option value="Allen">Allen</option>
+              <option value="McKinney">McKinney</option>
+              <option value="Dallas">Dallas</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1 px-2.5 py-1 bg-[#f4f8f5] hover:bg-white border border-[#dce8df] rounded-full text-xs font-bold text-[#004f46] shrink-0 transition-colors shadow-2xs">
+            <span className="text-[11px] text-idle-muted font-normal">Radius:</span>
+            <select
+              value={mapRadius}
+              onChange={(e) => setMapRadius(Number(e.target.value))}
+              className="bg-transparent border-0 outline-none cursor-pointer text-xs font-bold text-[#004f46] py-0.5 pr-1"
+              aria-label="Filter radius"
+            >
+              <option value={10}>10 mi</option>
+              <option value={20}>20 mi</option>
+              <option value={40}>40 mi</option>
+              <option value={80}>80 mi</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1 px-2.5 py-1 bg-[#f4f8f5] hover:bg-white border border-[#dce8df] rounded-full text-xs font-bold text-[#004f46] shrink-0 transition-colors shadow-2xs">
+            <SlidersHorizontal className="w-3 h-3 text-idle-emerald" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-transparent border-0 outline-none cursor-pointer text-xs font-bold text-[#004f46] py-0.5 pr-1"
+              aria-label="Sort listings"
+            >
+              <option value="featured">Featured</option>
+              <option value="low">Price: Low to High</option>
+              <option value="high">Price: High to Low</option>
+              <option value="az">A to Z</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Optional Saved Searches Tag Row */}
         {savedSearches.length > 0 && (
-          <div className="flex gap-2 flex-wrap pt-1 border-t border-[#edf3f0]">
+          <div className="flex gap-1.5 flex-wrap pt-1 border-t border-[#edf3f0]">
             {savedSearches.map((s, idx) => (
               <button
                 key={idx}
@@ -454,39 +435,43 @@ export const ExploreView = () => {
                   if (s.mapCity) setMapCity(s.mapCity);
                   if (s.mapRadius) setMapRadius(s.mapRadius);
                 }}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-idle-emerald border border-idle-emerald/20 hover:bg-emerald-100 transition-colors cursor-pointer"
+                className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-idle-emerald border border-idle-emerald/20 hover:bg-emerald-100 transition-colors cursor-pointer"
               >
-                <Search className="w-3 h-3" />
+                <Search className="w-2.5 h-2.5" />
                 <span>{s.name}</span>
               </button>
             ))}
           </div>
         )}
 
-        {/* Row 2: Heading + Listings Count on Left, + Create Post on Right */}
-        <div className="flex justify-between items-center gap-3 pt-2 border-t border-[#edf3f0] flex-wrap">
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <h2 className="text-lg sm:text-xl font-serif font-bold text-[#0e2e28]">
+        {/* Row 3: Results Heading with Badge + Post Action Button in ONE clean line */}
+        <div className="flex justify-between items-center gap-2 pt-2 border-t border-[#edf3f0]">
+          <div className="flex items-center gap-2 min-w-0">
+            <h2 className="text-base sm:text-lg font-serif font-bold text-[#0e2e28] truncate">
               {onlyFavorites
-                ? 'Your saved items'
+                ? 'Saved items'
                 : category === 'All'
-                  ? 'Nearby marketplace'
-                  : `${EXPLORE_CATEGORIES.find(c => c.id === category)?.title || category} offerings`}
+                  ? 'All marketplace listings'
+                  : `${EXPLORE_CATEGORIES.find(c => c.id === category)?.title || category}`}
             </h2>
-            <span className="text-xs text-[#6b7c72]">
-              · {filtered.length} illustrative listings ({mapCity}, {mapRadius} mi radius)
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-idle-mint text-idle-emerald border border-idle-emerald/20 shrink-0">
+              {filtered.length}
             </span>
           </div>
 
           <button
             type="button"
             onClick={() => {
-              if (setRoute) setRoute('post');
-              else window.location.href = '/post';
+              if (!isAuthenticated) {
+                addToast('Please sign in or create an account to post a listing', 'info');
+                setRoute('auth');
+              } else {
+                setRoute('post');
+              }
             }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-[#004f46] text-[#004f46] hover:bg-[#004f46] hover:text-white font-bold text-xs transition-colors cursor-pointer shadow-2xs"
+            className="gold-gradient-btn px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-bold shadow-xs flex items-center gap-1.5 shrink-0 cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
             <span>Create post</span>
           </button>
         </div>

@@ -68,12 +68,12 @@ export const NotFoundView = () => {
         <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-idle-gold/15 rounded-full blur-3xl pointer-events-none" />
 
         {/* Strictly centered vertical flex column layout */}
-        <div className="relative z-10 max-w-xl mx-auto flex flex-col items-center justify-center text-center space-y-5">
+        <div className="relative z-10 max-w-xl mx-auto flex flex-col items-center justify-center text-center space-y-4 sm:space-y-5">
           {/* Badge */}
           <div className="flex justify-center">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-idle-gold/10 border border-idle-gold/30 text-[#9c6f1a] text-xs font-semibold tracking-wider uppercase">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-idle-gold/10 border border-idle-gold/30 text-[#9c6f1a] text-[11px] sm:text-xs font-semibold tracking-wider uppercase shadow-2xs">
               <span className="w-2 h-2 rounded-full bg-idle-gold animate-pulse" />
-              Error 404
+              404 ERROR · PAGE NOT FOUND
             </div>
           </div>
 

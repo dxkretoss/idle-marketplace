@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { CATEGORIES } from '../data/mockData';
 import { ListingCard } from '../components/listings/ListingCard';
 import { StoriesStrip } from '../components/reels/StoriesStrip';
+import { CategoryNavigation } from '../components/common/CategoryNavigation';
 import { ReelUploadModal } from '../components/modals/ReelUploadModal';
 import { Footer } from '../components/layout/Footer';
 import {
@@ -25,7 +26,8 @@ import {
   Camera,
   Check,
   MapPin,
-  Clock
+  Clock,
+  Heart
 } from 'lucide-react';
 
 const HERO_SHOWCASES = [
@@ -120,12 +122,13 @@ const FAQS = [
 ];
 
 export const HomeView = () => {
-  const { setRoute, setCategory, listings, setActiveListing, user, setReelsFilter } = useApp();
+  const { setRoute, setCategory, listings, setActiveListing, user, setReelsFilter, likes = [], toggleLike } = useApp();
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [activeShowcaseId, setActiveShowcaseId] = useState('cinema');
   const [openFaqIndex, setOpenFaqIndex] = useState(0);
   const [faqCategory, setFaqCategory] = useState('All');
-  const [feedFilter, setFeedFilter] = useState('personalized'); // 'personalized' | 'all'
+  const [feedFilter, setFeedFilter] = useState('all'); // 'all' | 'saved'
+  const [homeCategory, setHomeCategory] = useState('All');
 
   const activeShowcase = HERO_SHOWCASES.find(s => s.id === activeShowcaseId) || HERO_SHOWCASES[0];
 
@@ -134,29 +137,37 @@ export const HomeView = () => {
     setRoute('explore');
   };
 
-  // User interest personalization
-  const userInterests = (user?.interests && user?.interests.length > 0) ? user.interests : [];
-  const hasSpecificInterests = userInterests.length > 0 && !userInterests.includes('All') && userInterests.length < 10;
-  const isPersonalized = feedFilter === 'personalized' && hasSpecificInterests;
+  // Filter listings according to home category filter and saved/all toggle
+  const displayedListings = React.useMemo(() => {
+    let pool = listings;
+    if (feedFilter === 'saved') {
+      pool = listings.filter(l => likes.includes(l.id));
+    }
 
-  // Filter listings according to user's selected interests
-  const personalizedListings = isPersonalized
-    ? listings.filter(l => userInterests.includes(l.category))
-    : listings;
-  const featuredListings = (personalizedListings.length > 0 ? personalizedListings : listings).slice(0, 8);
+    if (homeCategory && homeCategory !== 'All') {
+      const target = homeCategory.toLowerCase();
+      pool = pool.filter(l => {
+        const cat = (l.category || '').toLowerCase();
+        const type = (l.type || '').toLowerCase();
+        if (target === 'tools') return cat.includes('tool');
+        if (target === 'tasks') return type === 'service' || cat.includes('service');
+        if (target === 'rentals') return type === 'rental' || cat.includes('tool') || cat.includes('electronics');
+        if (target === 'vehicles') return cat.includes('vehicle');
+        if (target === 'fashion' || target === 'clothing') return cat.includes('fashion') || cat.includes('cloth');
+        if (target === 'electronics') return cat.includes('elect') || cat.includes('media');
+        if (target === 'services' || target === 'home services') return cat.includes('service') || cat.includes('home');
+        if (target === 'outdoor') return cat.includes('outdoor');
+        if (target === 'events') return cat.includes('event');
+        return cat.includes(target);
+      });
+    }
+    return pool;
+  }, [homeCategory, feedFilter, likes, listings]);
 
-  // Prioritize categories matching user interests to the front
-  const sortedCategories = [...CATEGORIES.filter(c => c.id !== 'All')].sort((a, b) => {
-    const aMatch = userInterests.includes(a.id);
-    const bMatch = userInterests.includes(b.id);
-    if (aMatch && !bMatch) return -1;
-    if (!aMatch && bMatch) return 1;
-    return 0;
-  });
+  const featuredListings = displayedListings.slice(0, 8);
 
   return (
-    <div className="space-y-10">
-
+    <div className="space-y-8">
 
       {/* Hero Section */}
       <section className="relative rounded-3xl overflow-hidden bg-[#073d36] min-h-[460px] lg:min-h-[500px] flex items-center shadow-glass border border-emerald-950/20 isolate">
@@ -366,8 +377,6 @@ export const HomeView = () => {
       </section>
 
 
-
-
       {/* Trust & Metric Ribbon - Distinct from original flat design */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 -mt-3">
         <div className="p-4 rounded-2xl bg-white border border-[#dce6e0] shadow-sm flex items-center gap-3.5 group hover:border-idle-emerald/40 hover:shadow-md transition-all">
@@ -411,15 +420,25 @@ export const HomeView = () => {
         </div>
       </section>
 
+      {/* 1. 24h Local Reels & Clickable Profile Bubbles at the Top of the Marketplace */}
+      <section className="pt-1">
+        <StoriesStrip
+          showHeader={true}
+          title="24h Local Reels"
+          showBubbles={true}
+          showExploreAndEnjoy={false}
+          onOpenUpload={() => setUploadModalOpen(true)}
+        />
+      </section>
 
-      {/* 24-Hour Reels Stories Strip */}
+
+
+      {/* Explore & Enjoy - Trending Local Providers */}
       <section>
         <StoriesStrip
-          onOpenUpload={() => setUploadModalOpen(true)}
-          onSelectCategory={(cat) => {
-            if (setReelsFilter) setReelsFilter(cat);
-            setRoute('reels');
-          }}
+          showHeader={false}
+          showBubbles={false}
+          showExploreAndEnjoy={true}
         />
       </section>
 
@@ -546,64 +565,34 @@ export const HomeView = () => {
         </div>
       </section> */}
 
-      {/* Shop by Category Tiles */}
-      <section className="space-y-4">
+      {/* 2. Category Navigation - Horizontal Scrollable Shortcuts (NOT Listing Posts) */}
+      <section className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-idle-gold block">
-              Make More Possible
+              Marketplace Shortcuts
             </span>
             <h2 className="font-serif text-xl md:text-2xl font-bold text-[#082f2c] flex items-center gap-2">
               <span className="w-1.5 h-5 rounded-full bg-idle-emerald inline-block" />
-              Shop by Category
+              <span>Explore by Category</span>
             </h2>
           </div>
-          <button
-            onClick={() => {
-              setCategory('All');
-              setRoute('explore');
-            }}
-            className="text-xs font-bold text-idle-emerald hover:text-idle-teal transition-colors flex items-center gap-1"
-          >
-            <span>All categories</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
+          {homeCategory !== 'All' && (
+            <button
+              type="button"
+              onClick={() => setHomeCategory('All')}
+              className="text-xs font-bold text-idle-emerald hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <span>Reset filter ({homeCategory})</span>
+              <span>&times;</span>
+            </button>
+          )}
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
-          {sortedCategories.map((cat) => {
-            const isPreferred = hasSpecificInterests && userInterests.includes(cat.id);
-            return (
-              <button
-                key={cat.id}
-                onClick={() => handleCategoryClick(cat.id)}
-                className={`glass-card glass-card-hover p-2.5 rounded-2xl flex flex-col text-left group overflow-hidden relative cursor-pointer ${isPreferred ? 'border-idle-emerald/40 bg-idle-mint/20' : ''
-                  }`}
-              >
-                <div className="h-28 rounded-xl overflow-hidden bg-emerald-950/10 mb-2 relative">
-                  <img
-                    src={cat.image}
-                    alt={cat.label}
-                    loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                  />
-                  {isPreferred && (
-                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-[#003d36]/90 backdrop-blur-xs text-[9px] font-bold text-idle-gold border border-idle-gold/40 shadow-xs flex items-center gap-1">
-                      <span>★</span>
-                      <span>Preferred</span>
-                    </span>
-                  )}
-                </div>
-                <strong className="text-xs font-bold text-[#112d26] group-hover:text-idle-emerald line-clamp-1">
-                  {cat.label}
-                </strong>
-                <p className="text-[10px] text-idle-muted line-clamp-1 mt-0.5">
-                  {cat.description}
-                </p>
-              </button>
-            );
-          })}
-        </div>
+        <CategoryNavigation
+          activeCategory={homeCategory}
+          onSelectCategory={(catId) => setHomeCategory(catId)}
+        />
       </section>
 
       {/* Featured Listings Grid */}
@@ -612,45 +601,44 @@ export const HomeView = () => {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold uppercase tracking-wider text-idle-gold block">
-                Curated for Discovery
+                {feedFilter === 'saved' ? 'Your Saved Items' : 'Curated for Discovery'}
               </span>
-              {hasSpecificInterests && isPersonalized && (
+              {feedFilter === 'saved' && (
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-idle-mint text-idle-emerald font-bold border border-idle-emerald/20">
-                  Tailored to your interests
+                  {likes.length} saved
                 </span>
               )}
             </div>
             <h2 className="font-serif text-xl md:text-2xl font-bold text-[#082f2c] flex items-center gap-2 mt-0.5">
               <span className="w-1.5 h-5 rounded-full bg-idle-emerald inline-block" />
-              {isPersonalized ? 'Recommended for You' : 'Featured Near You'}
+              {feedFilter === 'saved' ? 'Your Saved Listings' : 'Featured Near You'}
             </h2>
           </div>
 
           <div className="flex items-center gap-3">
-            {hasSpecificInterests && (
-              <div className="flex items-center p-1 bg-white border border-[#dce6e0] rounded-xl shadow-xs text-xs">
-                <button
-                  type="button"
-                  onClick={() => setFeedFilter('personalized')}
-                  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${isPersonalized
+            <div className="flex items-center p-1 bg-white border border-[#dce6e0] rounded-xl shadow-xs text-xs">
+              <button
+                type="button"
+                onClick={() => setFeedFilter('all')}
+                className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${feedFilter === 'all'
                     ? 'bg-idle-emerald text-white shadow-xs'
                     : 'text-idle-muted hover:text-[#172d28]'
-                    }`}
-                >
-                  My Interests ({userInterests.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFeedFilter('all')}
-                  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${!isPersonalized
+                  }`}
+              >
+                All Items
+              </button>
+              <button
+                type="button"
+                onClick={() => setFeedFilter('saved')}
+                className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${feedFilter === 'saved'
                     ? 'bg-idle-emerald text-white shadow-xs'
                     : 'text-idle-muted hover:text-[#172d28]'
-                    }`}
-                >
-                  All Items
-                </button>
-              </div>
-            )}
+                  }`}
+              >
+                <Heart className={`w-3.5 h-3.5 ${feedFilter === 'saved' ? 'fill-white text-white' : likes.length > 0 ? 'fill-red-500 text-red-500' : 'text-idle-muted'}`} />
+                <span>Saved ({likes.length})</span>
+              </button>
+            </div>
 
             <button
               onClick={() => setRoute('explore')}
@@ -662,11 +650,30 @@ export const HomeView = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {featuredListings.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} />
-          ))}
-        </div>
+        {featuredListings.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {featuredListings.map((listing) => (
+              <ListingCard key={listing.id} listing={listing} />
+            ))}
+          </div>
+        ) : (
+          <div className="p-8 rounded-2xl bg-white border border-[#dce6e0] text-center space-y-2">
+            <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mx-auto">
+              <Heart className="w-6 h-6 fill-current" />
+            </div>
+            <h3 className="font-bold text-[#082f2c] text-sm">No saved listings yet</h3>
+            <p className="text-xs text-idle-muted max-w-sm mx-auto">
+              Click the heart icon on any equipment or service card across the marketplace to save it here for fast access.
+            </p>
+            <button
+              type="button"
+              onClick={() => setFeedFilter('all')}
+              className="px-4 py-2 rounded-xl bg-idle-emerald text-white font-bold text-xs shadow-xs hover:bg-idle-teal transition-all cursor-pointer inline-block mt-1"
+            >
+              Browse All Listings
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Promotional Triple Panels */}
@@ -735,25 +742,7 @@ export const HomeView = () => {
         </div>
       </section>
 
-      {/* Prototype Studio Membership Invite Banner */}
-      <section className="section">
-        <div className="membership-invite shadow-xl">
-          <div className="space-y-1.5">
-            <div className="eyebrow">START YOUR OWN OPPORTUNITY</div>
-            <h2>Browse for free. <em>Build with Studio.</em></h2>
-            <p>
-              One subscription across eligible trades, rentals, services and promotional Reels. No IDLE commission on peer transaction value.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setRoute('membership')}
-            className="gold-gradient-btn px-6 py-3.5 rounded-xl text-xs md:text-sm font-bold text-[#0f241d] shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-transform flex-shrink-0 cursor-pointer"
-          >
-            Explore memberships →
-          </button>
-        </div>
-      </section>
+
 
       {/* ================= FAQS SECTION ================= */}
       <section className="space-y-6 pt-4">
@@ -842,6 +831,26 @@ export const HomeView = () => {
             className="px-4 py-2 rounded-xl bg-idle-emerald hover:bg-forest-light text-white text-xs font-bold transition-all flex-shrink-0 shadow-sm cursor-pointer"
           >
             Explore Marketplace
+          </button>
+        </div>
+      </section>
+
+      {/* Prototype Studio Membership Invite Banner */}
+      <section className="section">
+        <div className="membership-invite shadow-xl">
+          <div className="space-y-1.5">
+            <div className="eyebrow">START YOUR OWN OPPORTUNITY</div>
+            <h2>Browse for free. <em>Build with Studio.</em></h2>
+            <p>
+              One subscription across eligible trades, rentals, services and promotional Reels. No IDLE commission on peer transaction value.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setRoute('membership')}
+            className="gold-gradient-btn px-6 py-3.5 rounded-xl text-xs md:text-sm font-bold text-[#0f241d] shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-transform flex-shrink-0 cursor-pointer"
+          >
+            Explore memberships →
           </button>
         </div>
       </section>

@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Sparkles,
   ArrowRight,
+  ArrowLeft,
   Lock,
   User,
   QrCode,
@@ -105,6 +106,7 @@ export const MessagesView = () => {
   const [inputText, setInputText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [mobileChatOpen, setMobileChatOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -265,10 +267,12 @@ const handleImageAttachment = (e) => {
         </div>
       )}
 
-      {/* Messenger Container - Authentic High-End Chat Layout */}
-      <div className="glass-card rounded-3xl border border-idle-emerald/20 overflow-hidden shadow-glass grid grid-cols-1 md:grid-cols-12 min-h-[600px] max-h-[750px]">
+      {/* Messenger Container - 100% Responsive on Mobile, Tablet & Desktop */}
+      <div className="glass-card rounded-3xl border border-idle-emerald/20 overflow-hidden shadow-glass grid grid-cols-1 md:grid-cols-12 h-[calc(100vh-210px)] min-h-[520px] md:h-auto md:min-h-[600px] md:max-h-[750px]">
         {/* Left Threads Column */}
-        <div className="md:col-span-5 border-r border-idle-line flex flex-col bg-[#fbfdfc]">
+        <div className={`md:col-span-5 border-r border-idle-line flex flex-col bg-[#fbfdfc] h-full ${
+          mobileChatOpen ? 'hidden md:flex' : 'flex'
+        }`}>
           {/* Header & Search */}
           <div className="p-3.5 border-b border-idle-line space-y-2.5">
             <div className="flex items-center justify-between">
@@ -314,7 +318,10 @@ const handleImageAttachment = (e) => {
                 return (
                   <button
                     key={thread.id}
-                    onClick={() => setActiveThreadId(thread.id)}
+                    onClick={() => {
+                      setActiveThreadId(thread.id);
+                      setMobileChatOpen(true);
+                    }}
                     className={`w-full p-3.5 flex items-start gap-3 text-left transition-all cursor-pointer relative ${isSelected
                       ? 'bg-idle-mint/50 border-l-4 border-idle-emerald shadow-xs'
                       : 'hover:bg-black/5'
@@ -350,48 +357,64 @@ const handleImageAttachment = (e) => {
         </div>
 
         {/* Right Active Chat Pane */}
-        <div className="md:col-span-7 flex flex-col bg-white overflow-hidden">
+        <div className={`md:col-span-7 flex flex-col bg-white overflow-hidden h-full ${
+          !mobileChatOpen ? 'hidden md:flex' : 'flex'
+        }`}>
           {activeThread ? (
             <>
               {/* Chat Header - Clickable Provider Profile Trigger */}
-              <div className="p-3.5 sm:p-4 border-b border-idle-line flex items-center justify-between bg-[#f8faf9] gap-3">
-                {/* Clickable Profile Area */}
-                <div
-                  onClick={() => setProfileModalOpen(true)}
-                  className="flex items-center gap-3 cursor-pointer group min-w-0"
-                  title="Click to view member profile & verification credentials"
-                >
-                  <div className="relative flex-shrink-0">
-                    <img
-                      src={getProviderImage(activeThread)}
-                      alt={activeThread.providerName}
-                      className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-white shadow-sm ring-2 ring-idle-emerald/30 group-hover:ring-idle-emerald transition-all"
-                    />
-                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white shadow-xs" />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="font-serif text-sm sm:text-base font-bold text-[#112d26] flex items-center gap-2 group-hover:text-idle-emerald transition-colors truncate">
-                      <span className="truncate">{activeThread.providerName}</span>
-                      <span className="text-[10px] font-semibold bg-idle-mint text-idle-emerald px-2 py-0.5 rounded-full border border-idle-emerald/20 flex items-center gap-1 shrink-0">
-                        <ShieldCheck className="w-3 h-3 text-idle-emerald" />
-                        <span>Verified</span>
-                      </span>
-                    </h3>
-                    <div className="flex items-center gap-2 text-xs text-idle-muted mt-0.5">
-                      <span className="flex items-center gap-1 text-emerald-600 font-medium text-[11px]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        Online now
-                      </span>
+              <div className="p-3 sm:p-4 border-b border-idle-line flex items-center justify-between bg-[#f8faf9] gap-2 sm:gap-3">
+                {/* Left: Mobile Back Button + Clickable Profile Area */}
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => setMobileChatOpen(false)}
+                    className="md:hidden p-1.5 rounded-full text-[#004f46] hover:bg-black/5 cursor-pointer flex-shrink-0"
+                    title="Back to conversations list"
+                    aria-label="Back to conversations"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+
+                  <div
+                    onClick={() => setProfileModalOpen(true)}
+                    className="flex items-center gap-2.5 sm:gap-3 cursor-pointer group min-w-0"
+                    title="Click to view member profile & verification credentials"
+                  >
+                    <div className="relative flex-shrink-0">
+                      <img
+                        src={getProviderImage(activeThread)}
+                        alt={activeThread.providerName}
+                        className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover border-2 border-white shadow-sm ring-2 ring-idle-emerald/30 group-hover:ring-idle-emerald transition-all"
+                      />
+                      <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white shadow-xs" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-serif text-sm sm:text-base font-bold text-[#112d26] flex items-center gap-1.5 group-hover:text-idle-emerald transition-colors">
+                        <span className="truncate max-w-[130px] sm:max-w-[200px] md:max-w-none">{activeThread.providerName}</span>
+                        {/* Compact verified icon on mobile, full pill on tablet/desktop */}
+                        <ShieldCheck className="w-4 h-4 text-idle-emerald shrink-0 inline sm:hidden" title="Verified Member" />
+                        <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold bg-idle-mint text-idle-emerald px-2 py-0.5 rounded-full border border-idle-emerald/20 shrink-0">
+                          <ShieldCheck className="w-3 h-3 text-idle-emerald" />
+                          <span>Verified</span>
+                        </span>
+                      </h3>
+                      <div className="flex items-center gap-2 text-xs text-idle-muted mt-0.5">
+                        <span className="flex items-center gap-1 text-emerald-600 font-medium text-[11px]">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Online now
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Header Action Buttons */}
+                {/* Header Action Buttons - Solid emerald filled button */}
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     type="button"
                     onClick={handleViewBooking}
-                    className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold border border-idle-emerald text-idle-emerald hover:bg-idle-mint transition-colors cursor-pointer shadow-xs"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#004f46] hover:bg-[#003932] text-white transition-all cursor-pointer shadow-xs whitespace-nowrap"
                   >
                     <QrCode className="w-3.5 h-3.5" />
                     <span className="hidden sm:inline">View Booking</span>

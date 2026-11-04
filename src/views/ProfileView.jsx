@@ -191,84 +191,138 @@ export const ProfileView = () => {
         </p>
       </div>
 
-      {/* Member Banner Card */}
-      <div className="glass-card p-6 md:p-8 rounded-3xl border border-idle-emerald/20 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-glass">
-        <div className="flex items-center gap-4 text-center sm:text-left">
-          {/* Avatar with Camera Icon Overlay & Direct Change Controls */}
-          <div className="relative group flex-shrink-0">
-            <div 
-              onClick={() => setAvatarModalOpen(true)}
-              className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gradient-to-tr from-[#d6a746] to-[#004f46] text-white flex items-center justify-center font-bold text-xl sm:text-2xl shadow-md border-2 border-white cursor-pointer relative transition-all group-hover:scale-105 group-hover:shadow-lg"
-              title="Click to change profile photo"
-            >
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt={user.name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
-              ) : (
-                <span>{user.avatar || 'AM'}</span>
-              )}
+      {/* Member Banner Card - Elevated Executive Profile Header */}
+      <div className="glass-card p-5 sm:p-6 md:p-7 rounded-3xl border border-idle-emerald/20 shadow-glass space-y-5 bg-gradient-to-br from-white via-[#fcfdfc] to-[#f2f8f5]">
+        {/* Top: Avatar, Name, Badges, Location & Meta */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4 min-w-0">
+            {/* Avatar with Camera Icon Overlay & Direct Change Controls */}
+            <div className="relative group flex-shrink-0">
+              <div 
+                onClick={() => setAvatarModalOpen(true)}
+                className="w-16 h-16 sm:w-20 sm:h-20 md:w-22 md:h-22 rounded-full overflow-hidden bg-gradient-to-tr from-[#d6a746] to-[#004f46] text-white flex items-center justify-center font-bold text-xl sm:text-2xl md:text-3xl shadow-md border-2 border-white ring-4 ring-idle-emerald/10 cursor-pointer relative transition-all group-hover:scale-105 group-hover:shadow-lg"
+                title="Click to change profile photo"
+              >
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={user.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                ) : (
+                  <span>{user.avatar || 'AM'}</span>
+                )}
 
-              {/* Hover Dark Overlay with Camera Icon */}
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-1">
-                <Camera className="w-5 h-5 text-idle-gold" />
-                <span className="text-[9px] font-bold mt-0.5">Change</span>
+                {/* Hover Dark Overlay with Camera Icon */}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-1">
+                  <Camera className="w-5 h-5 text-idle-gold" />
+                  <span className="text-[9px] font-bold mt-0.5">Change</span>
+                </div>
+              </div>
+
+              {/* Floating Camera Badge Button */}
+              <button
+                type="button"
+                onClick={() => setAvatarModalOpen(true)}
+                className="absolute -bottom-0.5 -right-0.5 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#004f46] text-white border-2 border-white shadow-md flex items-center justify-center hover:bg-[#00342e] hover:scale-110 transition-all cursor-pointer"
+                title="Change profile photo"
+                aria-label="Change profile photo"
+              >
+                <Camera className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-idle-goldLight" />
+              </button>
+            </div>
+
+            {/* Name, Badges & Location */}
+            <div className="space-y-1.5 min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="font-serif text-xl sm:text-2xl md:text-3xl font-bold text-[#082f2c] truncate">
+                  {user.name}
+                </h2>
+                <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-bold text-idle-emerald bg-idle-mint px-2.5 py-0.5 rounded-full border border-idle-emerald/20 whitespace-nowrap">
+                  <ShieldCheck className="w-3.5 h-3.5 text-idle-emerald" /> ID Verified
+                </span>
+                <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-bold text-amber-900 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300 shadow-2xs whitespace-nowrap">
+                  <Sparkles className="w-3.5 h-3.5 text-idle-gold" /> Monthly Top Provider
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-idle-muted">
+                <span className="flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-idle-gold flex-shrink-0" />
+                  <span>{area} · North Texas Pilot</span>
+                </span>
+                <span className="hidden sm:inline text-idle-line">|</span>
+                <span className="flex items-center gap-1 text-idle-muted">
+                  <Mail className="w-3.5 h-3.5 text-idle-emerald flex-shrink-0" />
+                  <span>{email}</span>
+                </span>
               </div>
             </div>
-
-            {/* Small Floating Camera Badge Button */}
-            <button
-              type="button"
-              onClick={() => setAvatarModalOpen(true)}
-              className="absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-idle-emerald text-white border-2 border-white shadow-md flex items-center justify-center hover:bg-[#002f2a] hover:scale-110 transition-all cursor-pointer"
-              title="Change profile photo"
-            >
-              <Camera className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-            </button>
           </div>
 
-          <div className="space-y-1">
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-              <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#0d2e29]">
-                {user.name}
-              </h2>
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-idle-emerald bg-idle-mint px-2.5 py-0.5 rounded-full border border-idle-emerald/20">
-                <ShieldCheck className="w-3.5 h-3.5" /> ID Verified
-              </span>
-            </div>
-            <div className="flex items-center justify-center sm:justify-start gap-1 text-xs text-idle-muted">
-              <MapPin className="w-3.5 h-3.5 text-idle-gold" />
-              <span>{area} · North Texas Pilot</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setAvatarModalOpen(true)}
-              className="text-[11px] font-bold text-idle-emerald hover:underline flex items-center gap-1 cursor-pointer pt-0.5"
-            >
-              <Camera className="w-3 h-3" />
-              <span>Change profile photo</span>
-            </button>
+          {/* Right: Account Standing Badge */}
+          <div className="hidden lg:flex flex-col items-end justify-center shrink-0">
+            <span className="text-[10px] uppercase font-bold tracking-wider text-idle-muted">Account Standing</span>
+            <span className="inline-flex items-center gap-1 text-xs font-extrabold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 mt-0.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> In Good Standing
+            </span>
           </div>
         </div>
 
-        {/* Current Plan Badge Card */}
-        <div className="p-3.5 rounded-2xl bg-[#f4f8f6] border border-idle-line flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-idle-mint text-idle-emerald flex items-center justify-center">
-            <Crown className="w-5 h-5 text-idle-gold" />
+        {/* Bottom Two Balanced Cards: COI Warning & Subscription Plan */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-4 border-t border-idle-line/70">
+          {/* Card 1: Certificate of Insurance (COI) */}
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-50/70 border border-amber-200/90 flex items-center justify-between gap-3 text-amber-950 transition-all hover:border-amber-300">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 border border-amber-200">
+                <Bell className="w-4 h-4 text-amber-700 animate-pulse" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <strong className="text-xs sm:text-sm font-bold text-amber-950">Certificate of Insurance (COI)</strong>
+                  <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-200 text-amber-900 border border-amber-300 whitespace-nowrap">
+                    Renews in 14 days
+                  </span>
+                </div>
+                <p className="text-[11px] text-amber-800/90 mt-0.5 truncate">
+                  Next Insurance commercial policy active · Verified status maintained
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => addToast('COI renewal verified with Next Insurance partner portal', 'success')}
+              className="px-3.5 py-1.5 rounded-xl bg-amber-200/90 hover:bg-amber-300 text-amber-950 text-xs font-bold shrink-0 transition-all shadow-xs cursor-pointer whitespace-nowrap"
+            >
+              Renew Now
+            </button>
           </div>
-          <div>
-            <span className="text-[10px] uppercase font-bold text-idle-muted block">Subscription Tier</span>
-            <strong className="text-sm font-bold text-[#172d28]">{plan} Plan</strong>
+
+          {/* Card 2: Current Subscription Plan */}
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-[#f2f8f5] border border-idle-emerald/20 flex items-center justify-between gap-3 transition-all hover:border-idle-emerald/40">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-idle-mint text-idle-emerald flex items-center justify-center shrink-0 border border-idle-emerald/20">
+                <Crown className="w-4 h-4 text-idle-gold" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] uppercase font-bold text-idle-muted">Subscription Tier</span>
+                  <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-idle-mint text-[#004f46] border border-idle-emerald/25">
+                    Active
+                  </span>
+                </div>
+                <strong className="text-xs sm:text-sm font-bold text-[#0d2e29] block truncate">
+                  {plan} Plan
+                </strong>
+              </div>
+            </div>
+            <button
+              onClick={() => setRoute('membership')}
+              className="px-3.5 py-1.5 rounded-xl bg-idle-emerald hover:bg-idle-forest text-white text-xs font-bold shrink-0 transition-all shadow-xs cursor-pointer whitespace-nowrap flex items-center gap-1"
+            >
+              <span>Change Plan</span>
+            </button>
           </div>
-          <button
-            onClick={() => setRoute('membership')}
-            className="text-xs font-bold text-idle-emerald hover:text-idle-teal underline ml-2"
-          >
-            Change
-          </button>
         </div>
       </div>
 

@@ -76,6 +76,7 @@ export const ReelsView = () => {
       <StoriesStrip 
         onOpenUpload={scrollToUpload} 
         title="Active 24h Stories" 
+        showViewAll={false}
         activeCategory={reelsFilter}
         onSelectCategory={(cat) => setReelsFilter(cat)}
       />
@@ -189,8 +190,17 @@ export const ReelsView = () => {
                       {reel.title}
                     </div>
                     <div className="text-[10px] text-emerald-200/90 truncate flex items-center justify-between">
-                      <span>{reel.author || 'Local Member'}</span>
-                      <span className="text-[9px] opacity-75">{reel.area?.split(',')[0] || 'DFW'}</span>
+                      <div className="flex items-center gap-1.5 truncate">
+                        <div className="w-4 h-4 rounded-full overflow-hidden shrink-0 border border-white/60">
+                          <img
+                            src={reel.avatar || reel.image}
+                            alt={reel.author}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <span className="truncate">{reel.author || 'Local Member'}</span>
+                      </div>
+                      <span className="text-[9px] opacity-75 shrink-0">{reel.area?.split(',')[0] || 'DFW'}</span>
                     </div>
                   </div>
                 </div>

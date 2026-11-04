@@ -54,6 +54,7 @@ export const BookingsView = () => {
   const [issueRemedy, setIssueRemedy] = useState('');
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
+  const [reviewPhoto, setReviewPhoto] = useState(null);
 
   // Local memory for filed cases & reviews in demo
   const [cases, setCases] = useState([]);
@@ -158,11 +159,13 @@ export const BookingsView = () => {
         bookingId: modalBooking.id,
         rating: reviewRating,
         text: reviewText,
+        photo: reviewPhoto,
         time: Date.now()
       }
     ]);
-    addToast('Review submitted! Thank you for your feedback.', 'success');
+    addToast('Review submitted with verified condition feedback!', 'success');
     setReviewText('');
+    setReviewPhoto(null);
     setBookingView('timeline');
   };
 
@@ -214,8 +217,8 @@ export const BookingsView = () => {
         </p>
       </div>
 
-      {/* Top Usage & Protection Overview Metrics */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* Top Usage & Protection Overview Metrics - Responsive 2x2 on Tablet, 4x1 on Desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="bg-white border border-[#dce8df] rounded-2xl p-4 flex flex-col gap-1 shadow-2xs">
           <strong className="text-xl sm:text-2xl font-bold text-[#004f46]">{bookings.length}</strong>
           <span className="text-xs text-[#6c7c73]">Total Records</span>
@@ -296,12 +299,12 @@ export const BookingsView = () => {
             return (
               <article
                 key={b.id}
-                className="bg-white border border-[#dce8df] hover:border-[#b4d1c0] rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xs transition-all"
+                className="bg-white border border-[#dce8df] hover:border-[#b4d1c0] rounded-2xl p-4 sm:p-5 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 shadow-2xs transition-all"
               >
                 {/* Left Side: Thumbnail + Metadata */}
-                <div className="flex items-start sm:items-center gap-3.5 sm:gap-4 w-full md:w-auto">
+                <div className="flex items-start sm:items-center gap-3.5 sm:gap-4 w-full xl:w-auto min-w-0">
                   {/* Picture Thumbnail */}
-                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden shrink-0 border border-[#dee8e1] shadow-2xs bg-[#f4f8f6]">
+                  <div className="relative w-18 h-18 sm:w-22 sm:h-22 rounded-xl overflow-hidden shrink-0 border border-[#dee8e1] shadow-2xs bg-[#f4f8f6]">
                     <img 
                       src={itemImg} 
                       alt={title} 
@@ -315,7 +318,7 @@ export const BookingsView = () => {
                       <span className="text-[10px] font-bold uppercase tracking-wider text-[#9b782c] bg-amber-50/80 px-2 py-0.5 rounded-md border border-amber-200/50">
                         {b.id}
                       </span>
-                      <span className="text-[11px] text-[#718278]">
+                      <span className="text-[11px] text-[#718278] truncate">
                         {providerName}
                       </span>
                     </div>
@@ -324,13 +327,13 @@ export const BookingsView = () => {
                       {title}
                     </h3>
 
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-[#596e64] pt-0.5">
-                      <span className="flex items-center gap-1 font-medium">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-[#596e64] pt-0.5">
+                      <span className="flex items-center gap-1 font-medium whitespace-nowrap">
                         <Calendar className="w-3.5 h-3.5 text-[#004f46]" />
                         <span>{dateStr}</span>
                       </span>
 
-                      <span className="flex items-center gap-1 text-[11px] font-semibold text-[#004f46] bg-[#edf7f3] px-2 py-0.5 rounded-full border border-[#cbe4d7]">
+                      <span className="flex items-center gap-1 text-[11px] font-semibold text-[#004f46] bg-[#edf7f3] px-2 py-0.5 rounded-full border border-[#cbe4d7] whitespace-nowrap">
                         <ShieldCheck className="w-3 h-3 text-[#004f46]" />
                         <span>Tint.ai Protected</span>
                       </span>
@@ -339,10 +342,10 @@ export const BookingsView = () => {
                 </div>
 
                 {/* Right Side: Status Progress + Price + CTA */}
-                <div className="flex items-center justify-between md:justify-end gap-4 sm:gap-6 w-full md:w-auto pt-3 md:pt-0 border-t md:border-t-0 border-[#f0f4f1]">
+                <div className="flex items-center justify-between xl:justify-end gap-3 sm:gap-6 w-full xl:w-auto pt-3 xl:pt-0 border-t xl:border-t-0 border-[#f0f4f1]">
                   {/* Status Badge & Step Indicator */}
-                  <div className="space-y-1 text-left md:text-right">
-                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${stageMeta.bg}`}>
+                  <div className="space-y-1 text-left xl:text-right">
+                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${stageMeta.bg} whitespace-nowrap`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${stageMeta.dot}`} />
                       <span>{stageMeta.label}</span>
                     </div>
@@ -472,27 +475,64 @@ export const BookingsView = () => {
             {/* Pane 1: TIMELINE VIEW */}
             {bookingView === 'timeline' && (
               <div className="space-y-4">
-                <div className="booking-timeline">
+                {/* Active Rental Return Reminder Countdown Banner matching Point #11 */}
+                {(modalBooking.stage === 'Handoff preview' || modalBooking.stage === 'Payment review') && (
+                  <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-300/70 flex items-start gap-3 text-amber-900 shadow-2xs">
+                    <div className="w-8 h-8 rounded-xl bg-amber-200/80 flex items-center justify-center shrink-0 text-amber-800 font-bold">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <strong className="text-xs font-bold text-amber-950">Active Rental Return Reminder</strong>
+                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-300">
+                          Due in 4 Hours
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-amber-800/90 mt-0.5 leading-relaxed">
+                        Condition return inspection photos and single-use QR custody scan are ready. Deposit hold of ${depositHold} releases upon clean check-in.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* All 5 Booking Steps in ONE single horizontal line */}
+                <div className="grid grid-cols-5 gap-1 sm:gap-2 my-4">
                   {STAGES.map((step, idx) => {
                     const isDone = idx <= currentStageIndex;
                     const isCurrent = idx === currentStageIndex;
+                    const shortName = step === 'Agreement preview' ? 'Agreement' : step === 'Payment review' ? 'Payment' : step === 'Handoff preview' ? 'Handoff' : step;
                     return (
-                      <div key={step} className={`booking-step ${isDone ? 'done' : ''}`}>
-                        <span>
+                      <div
+                        key={step}
+                        className={`p-1.5 sm:p-2.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[72px] sm:min-h-[85px] transition-all ${
+                          isCurrent
+                            ? 'bg-[#e8f5ee] border-2 border-idle-emerald text-[#004f46] shadow-xs'
+                            : isDone
+                            ? 'bg-[#edf8f1] border-[#b9d8c5] text-[#104b3d]'
+                            : 'bg-[#f7faf8] border-[#dce6df] text-[#718777]'
+                        }`}
+                      >
+                        <span
+                          className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-black mb-1 transition-colors ${
+                            isDone
+                              ? 'bg-[#004f46] text-white'
+                              : 'bg-[#e0e7df] text-[#6b8274]'
+                          }`}
+                        >
                           {idx < currentStageIndex ? (
-                            <Check className="w-4 h-4 stroke-[3]" />
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
                           ) : isCurrent ? (
-                            <Clock className="w-4 h-4" />
+                            <Clock className="w-3.5 h-3.5" />
                           ) : (
                             idx + 1
                           )}
                         </span>
-                        <div>
-                          <strong>{step}</strong>
-                          <small>
-                            {isCurrent ? 'Current stage' : idx < currentStageIndex ? 'Previewed' : 'Not yet reached'}
-                          </small>
-                        </div>
+                        <strong className="text-[10px] sm:text-xs font-bold leading-tight block truncate w-full text-center">
+                          {shortName}
+                        </strong>
+                        <span className="text-[8px] sm:text-[9px] text-[#708978] leading-none block truncate w-full mt-0.5 text-center">
+                          {isCurrent ? 'Current' : idx < currentStageIndex ? 'Previewed' : 'Pending'}
+                        </span>
                       </div>
                     );
                   })}
@@ -558,16 +598,47 @@ export const BookingsView = () => {
                   </div>
                 )}
 
-                {/* Stage 1 -> 2: Example Agreement Snapshot */}
+                {/* Stage 1 -> 2: Separate Digital Agreements (Rental vs Service) matching Point #9 */}
                 {currentStageIndex === 1 && (
-                  <div className="contract-sheet">
-                    <strong>Example agreement • Version 1</strong>
-                    <p><b>Parties:</b> Alex Morgan / {modalBooking.provider || 'Provider'}</p>
-                    <p><b>Scope:</b> {modalBooking.listingTitle || modalBooking.title}</p>
-                    <p><b>Price:</b> ${modalBooking.price} per {modalBooking.unit || 'day'}</p>
-                    <p><b>Date:</b> {proposedDate || modalBooking.dates || '10/31/2026'} {proposedTime}</p>
-                    <p><b>Cancellation and condition terms:</b> Must be accepted from actual final terms when implemented.</p>
-                  </div>
+                  (() => {
+                    const isRental = modalBooking.type === 'rental' || modalBooking.rentalDays || (modalBooking.unit && modalBooking.unit.includes('day'));
+                    if (isRental) {
+                      return (
+                        <div className="contract-sheet space-y-2 border-l-4 border-l-idle-emerald">
+                          <div className="flex items-center justify-between pb-1 border-b border-[#cadbd2]">
+                            <strong className="text-idle-emerald text-sm">Equipment Rental & Custody Agreement · Version 1</strong>
+                            <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                              Rental Contract
+                            </span>
+                          </div>
+                          <p><b>Renter:</b> Alex Morgan | <b>Equipment Owner:</b> {modalBooking.provider || 'Provider'}</p>
+                          <p><b>Rented Asset:</b> {modalBooking.listingTitle || modalBooking.title}</p>
+                          <p><b>Custody Window:</b> {proposedDate || modalBooking.dates || 'Agreed rental period'} ({modalBooking.rentalDays || 1} day{(modalBooking.rentalDays || 1) === 1 ? '' : 's'}) {proposedTime}</p>
+                          <p><b>Inspection & Handoff:</b> Mandatory condition photos at pickup and return via single-use QR custody protocol.</p>
+                          <p><b>Security Deposit Escrow:</b> ${depositHold} pre-authorization hold via Stripe Connect; released upon undamaged check-in.</p>
+                          <p><b>Operational Rules:</b> Prohibited off-label use; item must be returned clean. Late returns incur a $25/hr charge.</p>
+                          <p><b>Dispute Governance:</b> Direct party negotiation first, followed by third-party JAMS mediation resources.</p>
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div className="contract-sheet space-y-2 border-l-4 border-l-idle-gold">
+                          <div className="flex items-center justify-between pb-1 border-b border-[#cadbd2]">
+                            <strong className="text-[#082f2c] text-sm">Service & Task Performance Agreement · Version 1</strong>
+                            <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-100 text-amber-900">
+                              Service Contract
+                            </span>
+                          </div>
+                          <p><b>Client:</b> Alex Morgan | <b>Service Provider:</b> {modalBooking.provider || 'Provider'}</p>
+                          <p><b>Scope of Work:</b> {modalBooking.listingTitle || modalBooking.title}</p>
+                          <p><b>Rate & Schedule:</b> ${modalBooking.price} per {modalBooking.unit || 'task'} (${modalBooking.total || modalBooking.price} total) on {proposedDate || modalBooking.dates || 'Agreed date'} {proposedTime}</p>
+                          <p><b>Milestone Acceptance:</b> Funds held in escrow; released upon client delivery inspection and final completion sign-off.</p>
+                          <p><b>Change Orders:</b> Amendments to scope or timing must be agreed via message thread counter-offers prior to performance.</p>
+                          <p><b>Dispute Governance:</b> Direct party negotiation first, followed by third-party JAMS mediation resources.</p>
+                        </div>
+                      );
+                    }
+                  })()
                 )}
 
                 {/* Stage 2 -> 3: Payment Review WITH PRESERVED 3RD PARTY INSURANCE TOGGLE */}
@@ -826,6 +897,43 @@ export const BookingsView = () => {
                         required
                       />
                     </div>
+
+                    {/* Photo Upload Attachment for Condition Verification matching Point #10 */}
+                    <div>
+                      <label className="text-xs font-bold text-[#0e2e28] block mb-1">
+                        Attach Condition Photo (Optional Verification Proof)
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (ev) => setReviewPhoto(ev.target.result);
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          className="text-xs text-gray-500 file:mr-2.5 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-idle-mint file:text-idle-emerald hover:file:bg-emerald-100 cursor-pointer"
+                        />
+                        {reviewPhoto && (
+                          <button
+                            type="button"
+                            onClick={() => setReviewPhoto(null)}
+                            className="text-[10px] text-red-500 hover:underline font-bold"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      {reviewPhoto && (
+                        <div className="mt-2.5 relative w-20 h-20 rounded-xl overflow-hidden border-2 border-idle-emerald shadow-xs">
+                          <img src={reviewPhoto} alt="Review attachment" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                    </div>
+
                     <button
                       type="submit"
                       className="gold-gradient-btn px-5 py-2.5 rounded-xl text-xs font-bold shadow-md cursor-pointer"
@@ -836,8 +944,21 @@ export const BookingsView = () => {
                 )}
 
                 {reviews.filter(r => r.bookingId === modalBooking.id).map((r, i) => (
-                  <div key={i} className="subtle-box">
-                    ★ {r.rating}/5 · {r.text}
+                  <div key={i} className="subtle-box space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-[#082f2c]">★ {r.rating}/5 rating</span>
+                      {r.photo && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-idle-emerald bg-idle-mint px-2 py-0.5 rounded-full border border-idle-emerald/20">
+                          Photo Verified
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-[#60766a]">{r.text}</p>
+                    {r.photo && (
+                      <div className="w-20 h-20 rounded-xl overflow-hidden border border-idle-line mt-1">
+                        <img src={r.photo} alt="Verified condition proof" className="w-full h-full object-cover" />
+                      </div>
+                    )}
                   </div>
                 ))}
               </form>

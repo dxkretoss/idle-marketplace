@@ -7,6 +7,7 @@ import { ToastContainer } from './components/layout/ToastContainer';
 import { ListingDetailModal } from './components/modals/ListingDetailModal';
 import { ReelViewerModal } from './components/modals/ReelViewerModal';
 import { ResourceDetailModal } from './components/modals/ResourceDetailModal';
+import { ProviderProfileModal } from './components/modals/ProviderProfileModal';
 
 // Views
 import { HomeView } from './views/HomeView';
@@ -27,6 +28,7 @@ import { TermsView } from './views/TermsView';
 import { ElitePmView } from './views/ElitePmView';
 import { OwnerSandboxView } from './views/OwnerSandboxView';
 import { TasksView } from './views/TasksView';
+import { OnboardingView } from './views/OnboardingView';
 import { NotFoundView } from './views/NotFoundView';
 
 const MainContent = () => {
@@ -72,6 +74,8 @@ const MainContent = () => {
         return <ElitePmView />;
       case 'owner':
         return <OwnerSandboxView />;
+      case 'onboarding':
+        return <OnboardingView />;
       case '404':
         return <NotFoundView />;
       default:
@@ -102,8 +106,8 @@ const MainContent = () => {
         <div className={`flex-1 flex flex-col min-w-0 w-full ${isEliteRoute ? 'bg-[#0d1110]' : ''}`}>
           <Topbar />
 
-          {/* View Container */}
-          <main className={`flex-1 w-full min-w-0 ${isEliteRoute ? 'p-0 bg-[#0d1110]' : 'p-4 sm:p-6 md:p-8 pb-0 sm:pb-0 md:pb-0'}`}>
+          {/* View Container - Responsive padding flush to bottom */}
+          <main className={`flex-1 w-full min-w-0 ${isEliteRoute ? 'p-0 bg-[#0d1110]' : 'p-3.5 sm:p-5 md:p-6 lg:p-8 pb-0'}`}>
             {renderCurrentView()}
           </main>
         </div>
@@ -112,6 +116,7 @@ const MainContent = () => {
       {/* Global Interactive Modals & Drawers */}
       <ListingDetailModal />
       <ReelViewerModal />
+      <ProviderProfileModal />
       <ResourceDetailModal />
       <ToastContainer />
 

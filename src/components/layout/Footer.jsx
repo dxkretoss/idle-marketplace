@@ -10,7 +10,7 @@ export const Footer = () => {
   const { setRoute, setCategory, setSearch, setUserLocation, setSelectedResource } = useApp();
 
   return (
-    <footer className="mt-12 md:mt-16 -mx-4 sm:-mx-6 md:-mx-8 border-t border-emerald-950/20 bg-gradient-to-b from-[#002621] via-[#001f1a] to-[#001411] text-white rounded-t-[32px] md:rounded-t-[36px] rounded-b-none overflow-hidden shadow-2xl relative isolate pb-4 md:pb-4">
+    <footer className="mt-12 md:mt-16 -mx-3.5 sm:-mx-5 md:-mx-6 lg:-mx-8 border-t border-emerald-950/20 bg-gradient-to-b from-[#002621] via-[#001f1a] to-[#001411] text-white rounded-t-[32px] md:rounded-t-[36px] rounded-b-none overflow-hidden shadow-2xl relative isolate pb-20 md:pb-8">
       {/* Ambient background glow */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-idle-gold/10 rounded-full blur-3xl pointer-events-none -z-10" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -z-10" />

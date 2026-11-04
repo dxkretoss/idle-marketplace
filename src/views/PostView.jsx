@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react';
-import { useApp } from '../context/AppContext';
+import { useApp, PLAN_REGISTRY } from '../context/AppContext';
 import { 
   Sparkles,
   Check,
@@ -9,9 +9,12 @@ import {
   Eye,
   Archive,
   RotateCcw,
-  Trash2
+  Trash2,
+  Plus,
+  PackagePlus
 } from 'lucide-react';
 import { AuthGate } from '../components/common/AuthGate';
+import { ExtraListingAddonModal } from '../components/modals/ExtraListingAddonModal';
 
 const PRESET_IMAGES = [
   'https://images.unsplash.com/photo-1610477865545-37711c53144d?auto=format&fit=crop&w=800&q=80',
@@ -46,6 +49,7 @@ export const PostView = () => {
     setRoute,
     setActiveListing,
     reels,
+    extraSlots = [],
     isAuthenticated,
     addToast
   } = useApp();
@@ -61,6 +65,7 @@ export const PostView = () => {
   const [selectedImage, setSelectedImage] = useState(PRESET_IMAGES[0]);
   const [permission, setPermission] = useState(false);
   const [editingListingId, setEditingListingId] = useState(null);
+  const [addonModalOpen, setAddonModalOpen] = useState(false);
 
   const fileInputRef = useRef(null);
 
@@ -79,6 +84,13 @@ export const PostView = () => {
   // Check paid entitlement: Free accounts see the Studio upgrade box
   const isPaid = plan && plan !== 'Free';
   const canManageOrg = plan === 'Business' || plan === 'Enterprise' || plan === 'Studio Pro' || ownerRole === 'enterprise';
+
+  // Capacity calculations matching v7 idlePostingCap() & extraSlots
+  const planDetails = (PLAN_REGISTRY && PLAN_REGISTRY[plan]) || (PLAN_REGISTRY && PLAN_REGISTRY.Free) || { rentals: 0, services: 0 };
+  const extraRentalsCount = extraSlots.filter(s => s.kind === 'rental' && (!s.expiresAt || s.expiresAt > Date.now())).length;
+  const extraServicesCount = extraSlots.filter(s => s.kind !== 'rental' && (!s.expiresAt || s.expiresAt > Date.now())).length;
+  const rentalLimit = Number.isFinite(planDetails.rentals) ? planDetails.rentals + extraRentalsCount : Infinity;
+  const serviceLimit = Number.isFinite(planDetails.services) ? planDetails.services + extraServicesCount : Infinity;
 
   // Current user's listings
   const userListings = useMemo(() => {
@@ -204,6 +216,25 @@ export const PostView = () => {
       return;
     }
 
+    // Check plan capacity matching v7 idlePostingCap()
+    if (!editingListingId) {
+      if (plan === 'Free') {
+        addToast('Publishing earning listings requires a Studio plan or extra slot add-on.', 'error');
+        setAddonModalOpen(true);
+        return;
+      }
+      if (kind === 'rental' && Number.isFinite(rentalLimit) && activeRentals >= rentalLimit) {
+        addToast(`Rental capacity reached (${activeRentals}/${rentalLimit}). Add an extra slot or upgrade.`, 'error');
+        setAddonModalOpen(true);
+        return;
+      }
+      if ((kind === 'service' || kind === 'request') && Number.isFinite(serviceLimit) && activeServices >= serviceLimit) {
+        addToast(`Service/task capacity reached (${activeServices}/${serviceLimit}). Add an extra slot or upgrade.`, 'error');
+        setAddonModalOpen(true);
+        return;
+      }
+    }
+
     if (editingListingId) {
       if (updateListing) {
         updateListing(editingListingId, {
@@ -261,25 +292,58 @@ export const PostView = () => {
 
       {/* 3 Top Usage Stats Cards (.post-usage) matching Prototype */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="bg-white border border-[#dce8df] rounded-2xl p-4 sm:p-5 flex flex-col gap-1.5 shadow-2xs">
-          <strong className="text-xl sm:text-2xl font-bold text-[#004f46]">
-            {activeServices} / Fair use
-          </strong>
-          <span className="text-xs text-[#6c7c73]">Active service/task posts</span>
+        <div className="bg-white border border-[#dce8df] rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-1.5 shadow-2xs">
+          <div>
+            <strong className="text-xl sm:text-2xl font-bold text-[#004f46]">
+              {activeServices} / {Number.isFinite(serviceLimit) ? serviceLimit : 'Fair use'}
+            </strong>
+            <span className="text-xs text-[#6c7c73] block">Active service/task posts</span>
+            {extraServicesCount > 0 && (
+              <span className="text-[10px] text-idle-emerald font-semibold block mt-0.5">
+                +{extraServicesCount} extra 30-day slot active
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setAddonModalOpen(true)}
+            className="text-[11px] font-bold text-idle-gold hover:text-idle-goldHover flex items-center gap-1 w-fit mt-1 cursor-pointer"
+          >
+            <PackagePlus className="w-3.5 h-3.5" />
+            <span>Manage slots</span>
+          </button>
         </div>
 
-        <div className="bg-white border border-[#dce8df] rounded-2xl p-4 sm:p-5 flex flex-col gap-1.5 shadow-2xs">
-          <strong className="text-xl sm:text-2xl font-bold text-[#004f46]">
-            {activeRentals} / Fair use
-          </strong>
-          <span className="text-xs text-[#6c7c73]">Active rentals</span>
+        <div className="bg-white border border-[#dce8df] rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-1.5 shadow-2xs">
+          <div>
+            <strong className="text-xl sm:text-2xl font-bold text-[#004f46]">
+              {activeRentals} / {Number.isFinite(rentalLimit) ? rentalLimit : 'Fair use'}
+            </strong>
+            <span className="text-xs text-[#6c7c73] block">Active rentals</span>
+            {extraRentalsCount > 0 && (
+              <span className="text-[10px] text-idle-emerald font-semibold block mt-0.5">
+                +{extraRentalsCount} extra 30-day slot active
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setAddonModalOpen(true)}
+            className="text-[11px] font-bold text-idle-gold hover:text-idle-goldHover flex items-center gap-1 w-fit mt-1 cursor-pointer"
+          >
+            <PackagePlus className="w-3.5 h-3.5" />
+            <span>Manage slots</span>
+          </button>
         </div>
 
-        <div className="bg-white border border-[#dce8df] rounded-2xl p-4 sm:p-5 flex flex-col gap-1.5 shadow-2xs">
-          <strong className="text-xl sm:text-2xl font-bold text-[#004f46]">
-            {userReelsCount} / 12
-          </strong>
-          <span className="text-xs text-[#6c7c73]">Promotional Reels / 24h</span>
+        <div className="bg-white border border-[#dce8df] rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-1.5 shadow-2xs">
+          <div>
+            <strong className="text-xl sm:text-2xl font-bold text-[#004f46]">
+              {userReelsCount} / 12
+            </strong>
+            <span className="text-xs text-[#6c7c73] block">Promotional Reels / 24h</span>
+          </div>
+          <span className="text-[10px] text-idle-muted">24-hour auto archive</span>
         </div>
       </div>
 
@@ -670,6 +734,19 @@ export const PostView = () => {
           </div>
         )}
       </section>
+
+      {/* Extra Listing Add-on Modal */}
+      <ExtraListingAddonModal
+        isOpen={addonModalOpen}
+        onClose={() => setAddonModalOpen(false)}
+        activeRentals={activeRentals}
+        activeServices={activeServices}
+        rentalLimit={rentalLimit}
+        serviceLimit={serviceLimit}
+        extraRentalsCount={extraRentalsCount}
+        extraServicesCount={extraServicesCount}
+        targetKind={kind === 'rental' ? 'rental' : 'service'}
+      />
     </div>
   );
 };

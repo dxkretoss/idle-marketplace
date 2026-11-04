@@ -38,7 +38,7 @@ export const AppProvider = ({ children }) => {
 
   const savedState = loadInitialState();
 
-  const VALID_ROUTES = ['home', 'explore', 'reels', 'tasks', 'post', 'messages', 'transactions', 'bookings', 'enterprise', 'resources', 'membership', 'profile', 'journey', 'auth', 'privacy', 'terms', 'contact', 'elite-pm', 'owner', '404'];
+  const VALID_ROUTES = ['home', 'explore', 'reels', 'tasks', 'post', 'messages', 'transactions', 'bookings', 'enterprise', 'resources', 'membership', 'profile', 'journey', 'auth', 'privacy', 'terms', 'contact', 'elite-pm', 'owner', 'onboarding', '404'];
   const PHASE_2_ROUTES = [];
 
   const getInitialRoute = () => {
@@ -147,8 +147,8 @@ export const AppProvider = ({ children }) => {
     if (userData.plan) {
       setPlanState(userData.plan);
     }
-    addToast('Account created successfully!', 'success');
-    setRoute('home');
+    addToast('Account created successfully! Welcome to IDLE.', 'success');
+    setRoute('onboarding');
   };
 
   const logout = () => {
@@ -182,6 +182,7 @@ export const AppProvider = ({ children }) => {
   const [activeListing, setActiveListing] = useState(null);
   const [activeBooking, setActiveBooking] = useState(null);
   const [selectedResource, setSelectedResource] = useState(null);
+  const [selectedProvider, setSelectedProvider] = useState(null);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [postModalOpen, setPostModalOpen] = useState(false);
 
@@ -373,6 +374,19 @@ export const AppProvider = ({ children }) => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  const [extraSlots, setExtraSlots] = useState(savedState?.extraSlots || []);
+
+  const addExtraSlot = (kind = 'rental') => {
+    const newSlot = {
+      id: 'extra-' + Date.now(),
+      kind,
+      expiresAt: Date.now() + 30 * 86400000,
+      createdAt: Date.now()
+    };
+    setExtraSlots(prev => [...prev, newSlot]);
+    addToast(`Purchased 1 extra 30-day ${kind === 'rental' ? 'Rental' : 'Task/Service'} listing slot!`, 'success');
+  };
+
   // Switch subscription plan
   const setPlan = (newPlan) => {
     setPlanState(newPlan);
@@ -443,29 +457,32 @@ export const AppProvider = ({ children }) => {
   };
 
   // Create booking
-  const createBooking = (listing) => {
+  const createBooking = (listing, options = {}) => {
     if (!isAuthenticated) {
       addToast('Please sign in or create an account to book equipment or services', 'error');
       setRoute('auth');
       return;
     }
-    const days = 3;
-    const subtotal = (listing.price || 50) * days;
+    const days = options.rentalDays || 3;
+    const subtotal = options.subtotal || ((listing.price || 50) * days);
     const idleFee = Number((subtotal * 0.025).toFixed(2));
     const insurance = Number((12.50 * days).toFixed(2));
-    const totalDue = Number((subtotal + idleFee + insurance).toFixed(2));
-    const depositHold = listing.deposit || (listing.price > 100 ? 500 : 150);
+    const totalDue = options.total || Number((subtotal + idleFee + insurance).toFixed(2));
+    const depositHold = options.deposit || listing.deposit || (listing.price > 100 ? 500 : 150);
+    const dateRangeStr = options.dates || `Next ${days} Days (${days} days)`;
 
     const newBooking = {
       id: `BK-${Math.floor(1000 + Math.random() * 9000)}`,
       listingId: listing.id,
       listingTitle: listing.title,
+      type: listing.type || 'rental',
       provider: listing.owner || 'IDLE Verified Provider',
       renterName: user.name || 'Alex Morgan',
       price: listing.price,
       unit: listing.unit || 'day',
       rentalDays: days,
-      dates: `Next ${days} Days (${days} days)`,
+      startDate: options.startDate || new Date().toISOString().split('T')[0],
+      dates: dateRangeStr,
       deposit: depositHold,
       total: totalDue,
       stage: 'Payment review', // Open directly to Payment & Protection Plan review
@@ -477,14 +494,14 @@ export const AppProvider = ({ children }) => {
       image: listing.image,
       conditionPhotos: [listing.image],
       statusHistory: [
-        { time: 'Just now', message: `Booking initiated for ${listing.title}` },
-        { time: 'Just now', message: 'Payment review & Tint.ai protection plan ready' }
+        { time: 'Just now', message: `Booking initiated for ${listing.title} (${days} days: ${dateRangeStr})` },
+        { time: 'Just now', message: 'Payment review & escrow hold ready' }
       ]
     };
     setBookings(prev => [newBooking, ...prev]);
     setActiveBooking(newBooking);
     setRoute('bookings');
-    addToast(`Booking initiated for "${listing.title}"! Review payment & protection plan.`, 'success');
+    addToast(`Booking initiated for "${listing.title}"! (${days} days reserved)`, 'success');
   };
 
   // Toggle or update protection plan on a booking
@@ -736,13 +753,14 @@ export const AppProvider = ({ children }) => {
         bookings,
         inbox,
         enterpriseTeam,
-        enterpriseTasks
+        enterpriseTasks,
+        extraSlots
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
     } catch (e) {
       console.warn('Storage quota exceeded', e);
     }
-  }, [route, plan, ownerRole, user, isAuthenticated, search, category, sortBy, onlyFavorites, listings, likes, reels, bookings, inbox, enterpriseTeam, enterpriseTasks]);
+  }, [route, plan, ownerRole, user, isAuthenticated, search, category, sortBy, onlyFavorites, listings, likes, reels, bookings, inbox, enterpriseTeam, enterpriseTasks, extraSlots]);
 
   return (
     <AppContext.Provider value={{
@@ -805,6 +823,11 @@ export const AppProvider = ({ children }) => {
       addEnterpriseTask,
       selectedResource,
       setSelectedResource,
+      selectedProvider,
+      setSelectedProvider,
+      extraSlots,
+      setExtraSlots,
+      addExtraSlot,
       onboardingOpen,
       setOnboardingOpen,
       postModalOpen,

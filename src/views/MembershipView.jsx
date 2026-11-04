@@ -17,9 +17,15 @@ import {
 export const MembershipView = () => {
   const { plan, setPlan, addToast, setRoute } = useApp();
 
-  const handleSelectPlan = (planId) => {
-    setPlan(planId);
-    addToast(`Switched demo permissions to ${planId} Tier!`, 'success');
+  const handleSelectPlan = (tier) => {
+    if (tier.id === 'Elite PM') {
+      setPlan('Elite PM');
+      setRoute('elitepm');
+      addToast('Welcome to Elite PM Private Member Portal!', 'success');
+      return;
+    }
+    setPlan(tier.id);
+    addToast(`Switched demo permissions to ${tier.name} Tier!`, 'success');
   };
 
   const isElite = plan === 'Elite PM';
@@ -74,58 +80,72 @@ export const MembershipView = () => {
         </p>
       </div>
 
-      {/* 5 Plans Comparison Grid (.plan-grid-five matching prototype) */}
-      <div className="plan-grid-five">
+      {/* 5 Plans Comparison Grid (Free, Studio, Studio Pro, Business, Enterprise) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 items-stretch">
         {PLANS.map((tier) => {
           const isCurrent = plan === tier.id;
           const isRecommended = tier.id === 'Studio Pro';
+
           return (
             <article
               key={tier.id}
-              className={`plan-card ${isCurrent ? 'featured' : ''} ${isRecommended ? 'recommended' : ''}`}
+              className={`plan-card relative flex flex-col justify-between transition-all ${
+                isCurrent
+                  ? 'featured'
+                  : isRecommended
+                  ? 'recommended'
+                  : ''
+              }`}
             >
-              <div className="plan-name">
-                <div className="flex items-center justify-between">
-                  <span>{tier.name}</span>
-                  {isCurrent && (
-                    <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#004f46] text-white shadow-2xs">
-                      Active
-                    </span>
+              <div>
+                <div className="plan-name">
+                  <div className="flex items-center justify-between">
+                    <span>{tier.name}</span>
+                    {isCurrent && (
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#004f46] text-white shadow-2xs">
+                        Active
+                      </span>
+                    )}
+                  </div>
+                  {isRecommended && (
+                    <span className="plan-pick">For growing independents</span>
                   )}
                 </div>
-                {isRecommended && (
-                  <span className="plan-pick">For growing independents</span>
-                )}
+
+                <div className="plan-price">
+                  ${tier.price}
+                  <small>/month</small>
+                </div>
+
+                <p className="text-xs">
+                  {tier.caption || tier.description}
+                </p>
+
+                <ul className="mt-3 space-y-1.5">
+                  {tier.features.map((feat, idx) => (
+                    <li key={idx} className="flex items-start gap-1.5 text-[11px] leading-tight">
+                      <Check className="w-3.5 h-3.5 shrink-0 mt-0.5 text-idle-emerald" />
+                      <span className="text-gray-700">{feat}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
 
-              <div className="plan-price">
-                ${tier.price}
-                <small>/month</small>
-              </div>
-
-              <p>{tier.caption || tier.description}</p>
-
-              <ul>
-                {tier.features.map((feat, idx) => (
-                  <li key={idx}>
-                    <Check className="w-3.5 h-3.5 text-idle-emerald shrink-0 mt-0.5" />
-                    <span>{feat}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="pt-3 mt-auto">
+              <div className="pt-4 mt-auto">
                 <button
                   type="button"
-                  onClick={() => handleSelectPlan(tier.id)}
-                  className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${isCurrent
+                  onClick={() => handleSelectPlan(tier)}
+                  className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    isCurrent
                       ? 'border-2 border-[#004f46] text-[#004f46] bg-emerald-50/80 hover:bg-emerald-100 font-extrabold shadow-2xs'
                       : isRecommended
-                        ? 'gold-gradient-btn shadow-md text-[#0f241d]'
-                        : 'bg-[#004f46] hover:bg-[#003d36] text-white shadow-xs'
-                    }`}
+                      ? 'gold-gradient-btn shadow-md text-[#0f241d]'
+                      : 'bg-[#004f46] hover:bg-[#003d36] text-white shadow-xs'
+                  }`}
                 >
-                  {isCurrent ? 'Current demo access' : `Preview ${tier.name}`}
+                  {isCurrent
+                    ? 'Current demo access'
+                    : `Preview ${tier.name}`}
                 </button>
               </div>
             </article>
@@ -189,8 +209,8 @@ export const MembershipView = () => {
         </p>
       </div>
 
-      {/* Modern Value Proposition Callout Grid */}
-      <section className="glass-card p-6 md:p-8 rounded-3xl border border-idle-line grid grid-cols-1 md:grid-cols-3 gap-6 shadow-xs">
+      {/* Modern Value Proposition Callout Grid - Responsive on Tablet & Mobile */}
+      <section className="glass-card p-5 sm:p-6 md:p-6 lg:p-8 rounded-3xl border border-idle-line grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 shadow-xs">
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-idle-emerald font-bold text-sm">
             <div className="p-2 rounded-xl bg-idle-mint text-idle-emerald">

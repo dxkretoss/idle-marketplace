@@ -37,6 +37,7 @@ export const Topbar = () => {
     isAuthenticated,
     openAuth,
     logout,
+    setOnboardingOpen,
     addToast
   } = useApp();
 
@@ -100,7 +101,7 @@ export const Topbar = () => {
   const avatarPhoto = !imgError && (user.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80');
 
   return (
-    <header className="glass-header sticky top-0 z-30 h-16 md:h-18 px-4 md:px-7 flex items-center justify-between gap-3 md:gap-5 border-b border-idle-line">
+    <header className="glass-header sticky top-0 z-30 h-16 md:h-18 px-3 sm:px-4 md:px-5 lg:px-7 flex items-center justify-between gap-2.5 sm:gap-3 md:gap-4 border-b border-idle-line">
       {/* Brand Official Logo */}
       <button 
         onClick={() => setRoute('home')}
@@ -117,25 +118,25 @@ export const Topbar = () => {
         </span>
       </button>
 
-      {/* Global Search Bar */}
+      {/* Global Search Bar - Hidden on mobile view, visible on tablet & desktop */}
       <form 
         onSubmit={handleSearchSubmit}
-        className="flex-1 max-w-xl flex items-center gap-2 bg-[#f4f7f5] hover:bg-[#edf3f0] focus-within:bg-white border border-[#d6e3dc] focus-within:border-idle-emerald rounded-full px-3.5 py-2 transition-all shadow-inner"
+        className="hidden sm:flex flex-1 min-w-[170px] md:min-w-[200px] max-w-xl items-center gap-2 bg-[#f4f7f5] hover:bg-[#edf3f0] focus-within:bg-white border border-[#d6e3dc] focus-within:border-idle-emerald rounded-full px-3.5 py-2 transition-all shadow-inner"
       >
         <Search className="w-4 h-4 text-idle-muted flex-shrink-0" />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search tools, fashion, skills, trucks or people..."
-          className="bg-transparent border-0 outline-none w-full text-xs md:text-sm text-[#172d28] placeholder:text-idle-muted/70"
+          placeholder="Search gear, tools, pros..."
+          className="bg-transparent border-0 outline-none w-full min-w-0 text-xs md:text-sm text-[#172d28] placeholder:text-idle-muted/70"
           aria-label="Global marketplace search"
         />
         {search && (
           <button 
             type="button" 
             onClick={() => setSearch('')}
-            className="text-[11px] font-semibold text-idle-muted hover:text-[#172d28] px-1"
+            className="text-[11px] font-semibold text-idle-muted hover:text-[#172d28] px-1 flex-shrink-0"
           >
             Clear
           </button>
@@ -144,16 +145,16 @@ export const Topbar = () => {
 
       {/* Interactive Location Badge & Dropdown */}
       {isAuthenticated && (
-        <div className="relative" ref={locationRef}>
+        <div className="relative flex-shrink-0" ref={locationRef}>
           <button
             type="button"
             onClick={() => setLocationOpen(!locationOpen)}
-            className="hidden sm:flex items-center gap-1.5 bg-white hover:bg-[#edf3f0] border border-idle-line hover:border-idle-emerald/40 rounded-full px-3 py-1.5 text-xs text-[#28473f] shadow-sm transition-all cursor-pointer group"
+            className="hidden sm:flex items-center gap-1.5 bg-white hover:bg-[#edf3f0] border border-idle-line hover:border-idle-emerald/40 rounded-full px-2.5 sm:px-3 py-1.5 text-xs text-[#28473f] shadow-sm transition-all cursor-pointer group whitespace-nowrap flex-shrink-0"
             title="Click to change your local service area"
           >
             <MapPin className="w-3.5 h-3.5 text-idle-emerald flex-shrink-0 group-hover:scale-110 transition-transform" />
             <span className="font-semibold text-idle-emerald">{user.area || 'Frisco, TX'}</span>
-            <span className="text-[11px] text-idle-muted">· DFW Pilot</span>
+            <span className="text-[11px] text-idle-muted hidden xl:inline">· DFW Pilot</span>
             <ChevronDown className={`w-3 h-3 text-idle-muted group-hover:text-idle-emerald transition-transform duration-200 ${locationOpen ? 'rotate-180' : ''}`} />
           </button>
 
@@ -240,8 +241,8 @@ export const Topbar = () => {
                   <span>{user.avatar || 'AM'}</span>
                 )}
               </div>
-              <div className="hidden md:flex flex-col">
-                <span className="text-xs font-bold text-[#172d28] leading-tight">{user.name}</span>
+              <div className="hidden xl:flex flex-col text-left">
+                <span className="text-xs font-bold text-[#172d28] leading-tight truncate max-w-[120px]">{user.name}</span>
                 <span className="text-[10px] text-idle-emerald font-semibold uppercase tracking-wider">{plan}</span>
               </div>
               <ChevronDown className={`w-3.5 h-3.5 text-idle-muted group-hover:text-idle-emerald transition-transform duration-200 ${profileOpen ? 'rotate-180' : ''}`} />
@@ -266,6 +267,18 @@ export const Topbar = () => {
                   >
                     <User className="w-4 h-4 text-idle-emerald flex-shrink-0" />
                     <span>Profile</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRoute('onboarding');
+                      setProfileOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-[#1a3832] hover:bg-idle-mint/70 transition-colors text-left cursor-pointer"
+                  >
+                    <Sparkles className="w-4 h-4 text-idle-gold flex-shrink-0" />
+                    <span>Setup Wizard (#onboarding)</span>
                   </button>
 
                   <button
@@ -308,10 +321,12 @@ export const Topbar = () => {
         {isAuthenticated && (
           <button
             onClick={handlePostClick}
-            className="gold-gradient-btn flex items-center gap-1.5 px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-bold shadow-sm cursor-pointer"
+            className="gold-gradient-btn flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 md:px-4 py-1.5 sm:py-2 rounded-xl text-xs md:text-sm font-bold shadow-sm cursor-pointer flex-shrink-0"
+            title="Create a post"
+            aria-label="Create a post"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Post</span>
+            <span className="hidden sm:inline">Post</span>
           </button>
         )}
       </div>
