@@ -200,7 +200,7 @@ export const ProfileView = () => {
             <div className="relative group flex-shrink-0">
               <div 
                 onClick={() => setAvatarModalOpen(true)}
-                className="w-16 h-16 sm:w-20 sm:h-20 md:w-22 md:h-22 rounded-full overflow-hidden bg-gradient-to-tr from-[#d6a746] to-[#004f46] text-white flex items-center justify-center font-bold text-xl sm:text-2xl md:text-3xl shadow-md border-2 border-white ring-4 ring-idle-emerald/10 cursor-pointer relative transition-all group-hover:scale-105 group-hover:shadow-lg"
+                className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-gradient-to-tr from-[#d6a746] to-[#004f46] text-white flex items-center justify-center font-bold text-xl sm:text-2xl md:text-3xl shadow-md border-2 border-white ring-4 ring-idle-emerald/10 cursor-pointer relative transition-all group-hover:scale-105 group-hover:shadow-lg"
                 title="Click to change profile photo"
               >
                 {avatarUrl ? (

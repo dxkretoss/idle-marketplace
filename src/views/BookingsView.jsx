@@ -304,7 +304,7 @@ export const BookingsView = () => {
                 {/* Left Side: Thumbnail + Metadata */}
                 <div className="flex items-start sm:items-center gap-3.5 sm:gap-4 w-full xl:w-auto min-w-0">
                   {/* Picture Thumbnail */}
-                  <div className="relative w-18 h-18 sm:w-22 sm:h-22 rounded-xl overflow-hidden shrink-0 border border-[#dee8e1] shadow-2xs bg-[#f4f8f6]">
+                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-xl overflow-hidden border border-[#dee8e1] shadow-2xs bg-[#f4f8f6]">
                     <img 
                       src={itemImg} 
                       alt={title} 
